@@ -1,4 +1,7 @@
 
+using Microsoft.EntityFrameworkCore;
+using Nexora.Database;
+
 namespace Nexora
 {
     public class Program
@@ -8,6 +11,11 @@ namespace Nexora
             var builder = WebApplication.CreateBuilder(args);
 
             // Add services to the container.
+            var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+                ?? throw new InvalidOperationException("ConnectionString 'DefaultConnection' not found");
+
+            builder.Services.AddDbContext<ApplicationDbContext>(options => 
+               options.UseNpgsql(connectionString));
 
             builder.Services.AddControllers();
             // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
