@@ -23,3 +23,7 @@ dotnet run --project Nexora
 ```
 
 The application reads its database connection from the `DefaultConnection` connection string.
+
+## Configuration
+
+Keep local database credentials outside committed configuration files. For development, set `DefaultConnection` with user secrets or an environment-specific configuration file.
