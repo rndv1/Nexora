@@ -48,16 +48,32 @@ namespace Nexora.Database
                 .HasForeignKey<Session>(x => x.UserId);
 
             transactionEntity
-                .HasOne(x => x.Sender)
+                .HasOne(x => x.SenderAccount)
                 .WithMany(x => x.SentTransactions)
-                .HasForeignKey(x => x.SenderUserId)
+                .HasForeignKey(x => x.SenderAccountId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             transactionEntity
-                .HasOne(x => x.Receiver)
+                .HasOne(x => x.ReceiverAccount)
                 .WithMany(x => x.ReceivedTransactions)
-                .HasForeignKey(x => x.ReceiverUserId)
+                .HasForeignKey(x => x.ReceiverAccountId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            transactionEntity
+                .Property(x => x.Amount)
+                .HasPrecision(18, 2);
+
+            transactionEntity
+                .Property( x => x.CreatedAt)
+                .HasDefaultValueSql("now()");
+
+            accountEntity
+                .Property(x => x.Balance)
+                .HasPrecision(18, 2);
+
+            userEntity
+                .HasIndex(x => x.Login)
+                .IsUnique();
         }
     }
 }
