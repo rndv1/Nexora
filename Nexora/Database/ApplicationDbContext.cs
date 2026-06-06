@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Nexora.Models;
 
 
@@ -37,6 +38,8 @@ namespace Nexora.Database
             sessionEntity.HasKey(x => x.UserId);
             transactionEntity.HasKey(x => x.Id);
 
+            SeedUserData(userEntity);
+
             userEntity
                 .HasOne(x => x.Account)
                 .WithOne(x => x.User)
@@ -74,6 +77,26 @@ namespace Nexora.Database
             userEntity
                 .HasIndex(x => x.Login)
                 .IsUnique();
+        }
+
+        private void SeedUserData(EntityTypeBuilder<User> userEntity)
+        {
+            userEntity.HasData(
+                new User
+                {
+                    Id = 1,
+                    Login = "admin",
+                    Name = "Admin User",
+                    PasswordHash = "admin" //
+                },
+                new User
+                {
+                    Id = 2,
+                    Login = "user",
+                    Name = "Regular User",
+                    PasswordHash = "user"
+                }
+            );
         }
     }
 }
