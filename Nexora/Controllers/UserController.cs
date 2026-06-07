@@ -19,6 +19,11 @@ namespace Nexora.Controllers
         [HttpPost("register")] // POST api/user/register
         public async Task<IActionResult> Register([FromBody] RegisterRequest request)
         {
+            if (ModelState.IsValid == false)
+            {
+                return BadRequest(ModelState);
+            }
+            
             var result = await _userService.RegisterAsync(request.Login, request.Name,
                 request.PasswordHash);
             if (result)
