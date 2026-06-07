@@ -17,18 +17,13 @@ namespace Nexora.Services
             _accountServices=accountServices;
         }
 
-        public async Task<bool> RegisterAsync(string login, string name, string password) 
+        public async Task<Result> RegisterAsync(string login, string name, string password) 
         {
 
             var existing = await _context.Users.FirstOrDefaultAsync(predicate: x => x.Login == login);
             if (existing != null)
             {
-                return false;
-            }
-
-            if (string.IsNullOrWhiteSpace(password) || password.Length < 6)
-            {
-                return false;
+                return Result.Failure("Login already exists");
             }
 
             var user = new User
@@ -43,8 +38,40 @@ namespace Nexora.Services
 
             await _accountServices.CreateAccountAsync(login);
 
-            return true;
+            return Result.Success();
+        }
+
+        public async Task<Result<string>> LoginAsync(string login, string password)
+        {
+            var user = await _context.Users.FirstOrDefaultAsync(predicate: x => x.Login == login && x.PasswordHash == 
+             password);
+            if(user == null)
+            {
+                return Result<string>.Failure("Invalid login or password");
+            }
+
+            var session = new Session
+            {
+                UserId = user.Id,
+                Token = Guid.NewGuid().ToString(),
+                ExpiresAt = DateTime.UtcNow.AddHours(1)
+            };
+
+            var existingSession = await _context.Sessions.FirstOrDefaultAsync(predicate: x => x.UserId == user.Id);
+            if (existingSession != null)
+            {
+                existingSession.Token = session.Token; 
+                existingSession.ExpiresAt = session.ExpiresAt;
+                await _context.SaveChangesAsync();
+            }
+            else
+            {
+                _context.Sessions.Add(session);
+                await _context.SaveChangesAsync();
+            }
+
+            return Result<string>.Success(session.Token);
         }
     }
-
 }
+

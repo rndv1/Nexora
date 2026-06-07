@@ -32,5 +32,22 @@ namespace Nexora.Controllers
             }
             return BadRequest(new { Message = "User registration failed" });
         }
+
+        [HttpPost("Login")]
+        public async Task<IActionResult> LoginAsync([FromBody] LoginRequest request)
+        {
+            if (ModelState.IsValid == false)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var result = await _userService.LoginAsync(request.Login, request.PasswordHash);
+            if (result)
+            {
+                return Ok(new { Token = result.Value });
+            }
+            return NotFound(new { Message = "User not found" });
+        }
+
     }
 }
