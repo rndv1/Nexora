@@ -1,6 +1,7 @@
 
 using Microsoft.EntityFrameworkCore;
 using Nexora.Database;
+using Nexora.Services;
 
 namespace Nexora
 {
@@ -16,6 +17,8 @@ namespace Nexora
 
             builder.Services.AddDbContext<ApplicationDbContext>(options => 
                options.UseNpgsql(connectionString));
+            builder.Services.AddScoped<IUserService, UserService>();
+            builder.Services.AddScoped<IAccountService, AccountService>();
 
             builder.Services.AddControllers();
             // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
