@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace Nexora.DTOs
+namespace Nexora.DTOs.User
 {
     public class RegisterRequest
     {

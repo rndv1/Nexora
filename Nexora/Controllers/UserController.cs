@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Nexora.DTOs;
+using Nexora.DTOs.User;
 using Nexora.Services;
 
 
