@@ -19,6 +19,7 @@ namespace Nexora
                options.UseNpgsql(connectionString));
             builder.Services.AddScoped<IUserService, UserService>();
             builder.Services.AddScoped<IAccountService, AccountService>();
+            builder.Services.AddScoped<IFinanceService, FinanceService>();
 
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
