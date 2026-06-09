@@ -1,9 +1,11 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Nexora.DTOs.Finance
 {
 public class DepositRequest
 {
+    [FromQuery]
     [Required(ErrorMessage ="Поле token обязательно")] 
     public string Token { get; set; }
     
