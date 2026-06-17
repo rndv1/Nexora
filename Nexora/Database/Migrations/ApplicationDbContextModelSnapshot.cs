@@ -17,7 +17,7 @@ namespace Nexora.Database.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.7")
+                .HasAnnotation("ProductVersion", "10.0.8")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -43,6 +43,20 @@ namespace Nexora.Database.Migrations
                         .IsUnique();
 
                     b.ToTable("accounts", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Balance = 1000m,
+                            UserId = 1
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Balance = 2000m,
+                            UserId = 2
+                        });
                 });
 
             modelBuilder.Entity("Nexora.Models.Session", b =>

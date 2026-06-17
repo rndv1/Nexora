@@ -39,6 +39,7 @@ namespace Nexora.Database
             transactionEntity.HasKey(x => x.Id);
 
             SeedUserData(userEntity);
+            SeedAccountData(accountEntity);
 
             userEntity
                 .HasOne(x => x.Account)
@@ -95,6 +96,24 @@ namespace Nexora.Database
                     Login = "user",
                     Name = "Regular User",
                     PasswordHash = "user"
+                }
+            );
+        }
+        
+        private void SeedAccountData(EntityTypeBuilder<Account> accountEntity)
+        {
+            accountEntity.HasData(
+                new Account
+                {
+                    Id = 1,
+                    UserId =  1,
+                    Balance = 1000,
+                },
+                new Account
+                {
+                    Id = 2,
+                    UserId = 2,
+                    Balance = 2000,
                 }
             );
         }
