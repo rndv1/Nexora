@@ -14,14 +14,9 @@ public class FinanceService : IFinanceService
         _dbContext = dbContext;
     }
 
-    public async Task<Result<decimal>> GetBalanceAsync(string token)
+    public async Task<Result<decimal>> GetBalanceAsync(int userId)
     {
-        var session = await _dbContext.Sessions.FirstOrDefaultAsync(s => s.Token == token);
-        if (session == null)
-        {
-            return Result<decimal>.Failure("Пользователь не авторизован");
-        }
-        var user = await _dbContext.Users.FirstOrDefaultAsync(predicate: u => u.Id == session.UserId);
+        var user = await _dbContext.Users.FirstOrDefaultAsync(predicate: u => u.Id == userId);
         if (user == null)
         {
             return Result<decimal>.Failure("Пользователь не найден");
@@ -34,14 +29,9 @@ public class FinanceService : IFinanceService
         return Result <decimal>.Success(account.Balance);
     }
 
-    public async Task<Result> DepositAsync(string token, decimal amount)
+    public async Task<Result> DepositAsync(int userId, decimal amount)
     {
-        var session = await _dbContext.Sessions.FirstOrDefaultAsync(s => s.Token == token);
-        if (session == null)
-        {
-            return Result<decimal>.Failure("Пользователь не авторизован");
-        }
-        var user = await _dbContext.Users.FirstOrDefaultAsync(predicate: u => u.Id == session.UserId);
+        var user = await _dbContext.Users.FirstOrDefaultAsync(predicate: u => u.Id == userId);
         if (user == null)
         {
             return Result<decimal>.Failure("Пользователь не найден");
@@ -58,15 +48,9 @@ public class FinanceService : IFinanceService
         return Result.Success();
     }
 
-    public async Task<Result> TransferAsync(string fromToken, string receiverLogin, decimal amount)
+    public async Task<Result> TransferAsync(int fromUserId, string receiverLogin, decimal amount)
     {
-        var fromSession = await _dbContext.Sessions.FirstOrDefaultAsync(s => s.Token == fromToken);
-        if (fromSession == null)
-        {
-            return Result.Failure("Пользователь не авторизован");
-        }
-        
-        var fromUser = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == fromSession.UserId);
+        var fromUser = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == fromUserId);
 
         if (fromUser == null)
         {
@@ -108,16 +92,10 @@ public class FinanceService : IFinanceService
         return Result.Success();
     }
 
-    public async Task<Result<List<TransactionHistoryResponse>>> GetTransactionHistoryAsync(string token,
+    public async Task<Result<List<TransactionHistoryResponse>>> GetTransactionHistoryAsync(int userId,
         DateTime? dateFrom, DateTime? dateTo, int skip , int take)
     {
-        var session = await _dbContext.Sessions.FirstOrDefaultAsync(s => s.Token == token);
-        if (session == null)
-        {
-            return Result<List<TransactionHistoryResponse>>.Failure("Пользователь не авторизован");
-        }
-        
-        var account = await _dbContext.Accounts.FirstOrDefaultAsync(a => a.UserId == session.UserId);
+        var account = await _dbContext.Accounts.FirstOrDefaultAsync(a => a.UserId == userId);
 
         if (account == null)
         {

@@ -1,6 +1,8 @@
 
 using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi;
 using Nexora.Database;
+using Nexora.Middlewares;
 using Nexora.Services;
 
 namespace Nexora
@@ -22,7 +24,23 @@ namespace Nexora
             builder.Services.AddScoped<IFinanceService, FinanceService>();
 
             builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen();
+            builder.Services.AddSwaggerGen(options =>
+            {
+                options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+                {
+                    Name = "Authorization",
+                    Description = "Please insert api token",
+                    In = ParameterLocation.Header,
+                    Type = SecuritySchemeType.Http,
+                    Scheme = "bearer",
+                    BearerFormat = "Token",
+                });
+                
+                options.AddSecurityRequirement(document => new OpenApiSecurityRequirement
+                {
+                    [new OpenApiSecuritySchemeReference("Bearer", document)] = []
+                });
+            });
 
             builder.Services.AddControllers();
             builder.Services.AddOpenApi();
@@ -39,9 +57,10 @@ namespace Nexora
 
             app.UseHttpsRedirection();
 
-            app.UseAuthorization();
-
-
+            app.UseRouting();
+            
+            app.UseMiddleware<AuthorizationMiddleware>();
+            
             app.MapControllers();
 
             app.Run();

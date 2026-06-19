@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Nexora.Attributes;
 using Nexora.DTOs.Finance;
 using Nexora.Services;
 
@@ -6,6 +7,7 @@ namespace Nexora.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [MyAuthorize]
     public class FinanceController : Controller
     {
         private readonly IFinanceService _financeService;
@@ -16,9 +18,9 @@ namespace Nexora.Controllers
         }
 
         [HttpGet("balance")]
-        public async Task<IActionResult> GetBalanceAsync([FromHeader]string token)
+        public async Task<IActionResult> GetBalanceAsync()
         {
-            var balanceResult = await _financeService.GetBalanceAsync(token);
+            var balanceResult = await _financeService.GetBalanceAsync(GetUserId());
             if (balanceResult.IsSuccess)
             {
                 return Ok(new BalanceResponse
@@ -30,9 +32,11 @@ namespace Nexora.Controllers
         }
 
         [HttpPost("deposit")]
-        public async Task<IActionResult> DepositAsync([FromHeader]string token, [FromBody] DepositRequest request)
+        public async Task<IActionResult> DepositAsync([FromBody] DepositRequest request)
         {
-            var depositResult = await _financeService.DepositAsync(token, request.Amount);
+            var depositResult = await _financeService.DepositAsync(
+                GetUserId(), 
+                request.Amount);
             if (depositResult.IsSuccess)
             {
                 return Ok();
@@ -41,10 +45,13 @@ namespace Nexora.Controllers
         }
 
         [HttpPost("transfer")]
-        public async Task<IActionResult> TransferAsync([FromHeader]string token, [FromBody] TransferRequest request)
+        public async Task<IActionResult> TransferAsync([FromBody] TransferRequest request)
         {
             var transferResult =
-                await _financeService.TransferAsync(token, request.ReceiverLogin, request.Amount);
+                await _financeService.TransferAsync(
+                    GetUserId(), 
+                    request.ReceiverLogin, 
+                    request.Amount);
             if (transferResult.IsSuccess)
             {
                 return Ok();
@@ -53,15 +60,25 @@ namespace Nexora.Controllers
         }
 
         [HttpGet("history")]
-        public async Task<IActionResult> GetTransactionHistoryAsync([FromHeader]string token, [FromQuery]TransactionHistoryRequest request)
+        public async Task<IActionResult> GetTransactionHistoryAsync([FromQuery]TransactionHistoryRequest request)
         {
-            var historyResult = await _financeService.GetTransactionHistoryAsync(token, request.From,
-                request.To, request.Offset, request.Limit);
+            var historyResult = await _financeService.GetTransactionHistoryAsync(
+                GetUserId(),
+                request.From,
+                request.To,
+                request.Offset,
+                request.Limit);
             if (historyResult.IsSuccess)
             {
                 return Ok(historyResult.Value);
             }
             return BadRequest(new { Message = historyResult.ErrorMessage });
+        }
+
+        internal int GetUserId()
+        {
+            var userId = HttpContext.Items[Constants.UserIdContextParameterName] as int?;
+            return userId!.Value;
         }
     }
 }
