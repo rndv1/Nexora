@@ -44,6 +44,7 @@ namespace Nexora
 
             builder.Services.AddControllers();
             builder.Services.AddOpenApi();
+            builder.Services.AddHostedService<SessionCleanupService>();
 
             var app = builder.Build();
 
