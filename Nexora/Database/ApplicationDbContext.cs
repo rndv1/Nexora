@@ -88,14 +88,14 @@ namespace Nexora.Database
                     Id = 1,
                     Login = "admin",
                     Name = "Admin User",
-                    PasswordHash = "admin" //
+                    PasswordHash = "password123456" //
                 },
                 new User
                 {
                     Id = 2,
                     Login = "user",
                     Name = "Regular User",
-                    PasswordHash = "user"
+                    PasswordHash = "password"
                 }
             );
         }
