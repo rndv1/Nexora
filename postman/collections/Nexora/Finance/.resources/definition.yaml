@@ -1,0 +1,3 @@
+$kind: collection
+name: Finance
+description: Finance operations. All endpoints require a valid session token in the Authorization header.

@@ -1,0 +1,27 @@
+$kind: http-request
+name: Get Transaction History
+method: GET
+url: '{{baseUrl}}/api/finance/history'
+order: 4000
+auth:
+  type: bearer
+  credentials:
+    - key: token
+      value: '{{token}}'
+queryParams:
+  - key: from
+    value: ''
+    description: 'Start datetime filter (optional, e.g. 2024-01-01T00:00:00Z)'
+    disabled: true
+  - key: to
+    value: ''
+    description: 'End datetime filter (optional, e.g. 2024-12-31T23:59:59Z)'
+    disabled: true
+  - key: limit
+    value: '20'
+    description: 'Number of records to return (1-100, default 20)'
+    disabled: false
+  - key: offset
+    value: '0'
+    description: 'Number of records to skip (default 0)'
+    disabled: false
