@@ -5,7 +5,7 @@ namespace Nexora.DTOs.User
     public class LoginRequest
     {
         [Required(ErrorMessage = "Поле Login обязательно")]
-        [MinLength(3, ErrorMessage = "Минимальная длина логина 6 символов")]
+        [MinLength(4, ErrorMessage = "Минимальная длина логина 4 символа")]
         public required string Login { get; set; }
 
         [Required(ErrorMessage = "Поле Password обязательно")]
