@@ -9,12 +9,10 @@ namespace Nexora.Services
     {
 
         private readonly ApplicationDbContext _context;
-        private readonly IAccountService _accountServices;
 
-        public UserService(ApplicationDbContext context, IAccountService accountServices)
+        public UserService(ApplicationDbContext context)
         {
             _context = context;
-            _accountServices=accountServices;
         }
 
         public async Task<Result> RegisterAsync(string login, string name, string password) 
@@ -30,13 +28,15 @@ namespace Nexora.Services
             {
                 Login = login,
                 Name = name,
-                PasswordHash = password
+                PasswordHash = password,
+                Account = new Account
+                {
+                    Balance = 0
+                }
             };
 
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
-
-            await _accountServices.CreateAccountAsync(login);
 
             return Result.Success();
         }
