@@ -1,4 +1,3 @@
-
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi;
 using Nexora.Database;
@@ -9,7 +8,7 @@ namespace Nexora
 {
     public class Program
     {
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
 
@@ -43,15 +42,18 @@ namespace Nexora
             });
 
             builder.Services.AddControllers();
-            builder.Services.AddOpenApi();
             builder.Services.AddHostedService<SessionCleanupService>();
 
             var app = builder.Build();
+            var scopeContainer = app.Services.CreateScope();
+            using (scopeContainer)
+            {
+                var dbContainer = scopeContainer.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+                await dbContainer.Database.MigrateAsync();
+            }
 
             if (app.Environment.IsDevelopment())
             {
-                app.MapOpenApi();
-
                 app.UseSwagger();
                 app.UseSwaggerUI();
             }
