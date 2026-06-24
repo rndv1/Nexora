@@ -205,8 +205,7 @@ a background service every 10 minutes.
 |---|---|
 | `200 OK` | The operation completed successfully |
 | `400 Bad Request` | Validation failed or the operation cannot be completed |
-| `401 Unauthorized` | The Bearer token is missing, invalid, or expired |
-| `404 Not Found` | The user was not found during login |
+| `401 Unauthorized` | The login credentials are invalid, or the Bearer token is missing, invalid, or expired |
 
 Business errors use the following response format:
 
@@ -356,26 +355,26 @@ Example response:
 
 | Column | Type | Description |
 |---|---|---|
-| `Id` | integer | Primary key |
-| `Login` | text | Unique login |
-| `Name` | text | User name |
-| `PasswordHash` | text | User password data |
+| `id` | integer | Primary key |
+| `login` | text | Unique login |
+| `name` | text | User name |
+| `password_hash` | text | User password data |
 
 ### `accounts`
 
 | Column | Type | Description |
 |---|---|---|
-| `Id` | integer | Primary key |
-| `UserId` | integer | Foreign key to `users.Id` |
-| `Balance` | numeric(18,2) | Current balance |
+| `id` | integer | Primary key |
+| `user_id` | integer | Foreign key to `users.id` |
+| `balance` | numeric(18,2) | Current balance |
 
 ### `sessions`
 
 | Column | Type | Description |
 |---|---|---|
-| `UserId` | integer | Primary and foreign key to `users.Id` |
-| `Token` | text | Authorization token |
-| `ExpiresAt` | timestamp with time zone | Session expiration time |
+| `user_id` | integer | Primary and foreign key to `users.id` |
+| `token` | text | Authorization token |
+| `expires_at` | timestamp with time zone | Session expiration time |
 
 Only one active session can be stored for each user.
 
@@ -383,11 +382,11 @@ Only one active session can be stored for each user.
 
 | Column | Type | Description |
 |---|---|---|
-| `Id` | integer | Primary key |
-| `SenderAccountId` | integer | Foreign key to the sender account |
-| `ReceiverAccountId` | integer | Foreign key to the receiver account |
-| `Amount` | numeric(18,2) | Transfer amount |
-| `CreatedAt` | timestamp with time zone | Transaction creation time |
+| `id` | integer | Primary key |
+| `sender_account_id` | integer | Foreign key to the sender account |
+| `receiver_account_id` | integer | Foreign key to the receiver account |
+| `amount` | numeric(18,2) | Transfer amount |
+| `created_at` | timestamp with time zone | Transaction creation time |
 
 ## Relationships
 
@@ -399,30 +398,30 @@ erDiagram
     ACCOUNTS ||--o{ TRANSACTIONS : receives
 
     USERS {
-        int Id PK
-        string Login UK
-        string Name
-        string PasswordHash
+        int id PK
+        string login UK
+        string name
+        string password_hash
     }
 
     ACCOUNTS {
-        int Id PK
-        int UserId FK
-        decimal Balance
+        int id PK
+        int user_id FK
+        decimal balance
     }
 
     SESSIONS {
-        int UserId PK, FK
-        string Token
-        datetime ExpiresAt
+        int user_id PK, FK
+        string token
+        datetime expires_at
     }
 
     TRANSACTIONS {
-        int Id PK
-        int SenderAccountId FK
-        int ReceiverAccountId FK
-        decimal Amount
-        datetime CreatedAt
+        int id PK
+        int sender_account_id FK
+        int receiver_account_id FK
+        decimal amount
+        datetime created_at
     }
 ```
 

@@ -4,12 +4,12 @@ namespace Nexora.DTOs.User
 {
     public class LoginRequest
     {
-        [Required(ErrorMessage = "Поле Login обязательно")]
-        [MinLength(4, ErrorMessage = "Минимальная длина логина 4 символа")]
+        [Required(ErrorMessage = "Login is required")]
+        [MinLength(4, ErrorMessage = "Login must be at least 4 characters long")]
         public required string Login { get; set; }
 
-        [Required(ErrorMessage = "Поле Password обязательно")]
-        [MinLength(6, ErrorMessage = "Минимальная длина пароля 6 символов")]
+        [Required(ErrorMessage = "Password is required")]
+        [MinLength(6, ErrorMessage = "Password must be at least 6 characters long")]
         public required string PasswordHash { get; set; }
     }
 }

@@ -207,8 +207,7 @@ Swagger самостоятельно добавит префикс `Bearer`.
 |---|---|
 | `200 OK` | Операция выполнена успешно |
 | `400 Bad Request` | Ошибка валидации или выполнение операции невозможно |
-| `401 Unauthorized` | Bearer-токен отсутствует, недействителен или просрочен |
-| `404 Not Found` | Пользователь не найден при входе |
+| `401 Unauthorized` | Неверные данные для входа либо Bearer-токен отсутствует, недействителен или просрочен |
 
 Ошибки бизнес-логики возвращаются в формате:
 
@@ -358,26 +357,26 @@ curl.exe "https://localhost:7130/api/finance/history?offset=0&limit=20" `
 
 | Поле | Тип | Описание |
 |---|---|---|
-| `Id` | integer | Первичный ключ |
-| `Login` | text | Уникальный логин |
-| `Name` | text | Имя пользователя |
-| `PasswordHash` | text | Данные пароля пользователя |
+| `id` | integer | Первичный ключ |
+| `login` | text | Уникальный логин |
+| `name` | text | Имя пользователя |
+| `password_hash` | text | Данные пароля пользователя |
 
 ### `accounts`
 
 | Поле | Тип | Описание |
 |---|---|---|
-| `Id` | integer | Первичный ключ |
-| `UserId` | integer | Внешний ключ на `users.Id` |
-| `Balance` | numeric(18,2) | Текущий баланс |
+| `id` | integer | Первичный ключ |
+| `user_id` | integer | Внешний ключ на `users.id` |
+| `balance` | numeric(18,2) | Текущий баланс |
 
 ### `sessions`
 
 | Поле | Тип | Описание |
 |---|---|---|
-| `UserId` | integer | Первичный и внешний ключ на `users.Id` |
-| `Token` | text | Токен авторизации |
-| `ExpiresAt` | timestamp with time zone | Время окончания сессии |
+| `user_id` | integer | Первичный и внешний ключ на `users.id` |
+| `token` | text | Токен авторизации |
+| `expires_at` | timestamp with time zone | Время окончания сессии |
 
 Для одного пользователя хранится не более одной активной сессии.
 
@@ -385,11 +384,11 @@ curl.exe "https://localhost:7130/api/finance/history?offset=0&limit=20" `
 
 | Поле | Тип | Описание |
 |---|---|---|
-| `Id` | integer | Первичный ключ |
-| `SenderAccountId` | integer | Внешний ключ на счет отправителя |
-| `ReceiverAccountId` | integer | Внешний ключ на счет получателя |
-| `Amount` | numeric(18,2) | Сумма перевода |
-| `CreatedAt` | timestamp with time zone | Время создания операции |
+| `id` | integer | Первичный ключ |
+| `sender_account_id` | integer | Внешний ключ на счет отправителя |
+| `receiver_account_id` | integer | Внешний ключ на счет получателя |
+| `amount` | numeric(18,2) | Сумма перевода |
+| `created_at` | timestamp with time zone | Время создания операции |
 
 ## Связи
 
@@ -401,30 +400,30 @@ erDiagram
     ACCOUNTS ||--o{ TRANSACTIONS : receives
 
     USERS {
-        int Id PK
-        string Login UK
-        string Name
-        string PasswordHash
+        int id PK
+        string login UK
+        string name
+        string password_hash
     }
 
     ACCOUNTS {
-        int Id PK
-        int UserId FK
-        decimal Balance
+        int id PK
+        int user_id FK
+        decimal balance
     }
 
     SESSIONS {
-        int UserId PK, FK
-        string Token
-        datetime ExpiresAt
+        int user_id PK, FK
+        string token
+        datetime expires_at
     }
 
     TRANSACTIONS {
-        int Id PK
-        int SenderAccountId FK
-        int ReceiverAccountId FK
-        decimal Amount
-        datetime CreatedAt
+        int id PK
+        int sender_account_id FK
+        int receiver_account_id FK
+        decimal amount
+        datetime created_at
     }
 ```
 

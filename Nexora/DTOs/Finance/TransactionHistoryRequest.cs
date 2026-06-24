@@ -7,11 +7,11 @@ namespace Nexora.DTOs.Finance
     {
         public DateTime? From { get; set; }
         public DateTime? To { get; set; }
-        
-        [Range(1, 100, ErrorMessage = "Значение limit должно быть от 1 до 100")]
+
+        [Range(1, 100, ErrorMessage = "Limit must be between 1 and 100")]
         public int Limit { get; set; } = 20;
-        
-        [Range(0, int.MaxValue, ErrorMessage = "Значение offset не может быть отрицательным")]
+
+        [Range(0, int.MaxValue, ErrorMessage = "Offset cannot be negative")]
         public int Offset { get; set; } = 0;
     }
 }

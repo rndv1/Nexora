@@ -24,17 +24,17 @@ namespace Nexora.Controllers
             {
                 return BadRequest(ModelState);
             }
-            
+
             var result = await _userService.RegisterAsync(request.Login, request.Name,
                 request.PasswordHash);
             if (result)
             {
                 return Ok();
             }
-            return BadRequest(new { Message = "User registration failed" });
+            return BadRequest(new { Message = result.ErrorMessage });
         }
 
-        [HttpPost("Login")]
+        [HttpPost("login")]
         public async Task<IActionResult> LoginAsync([FromBody] LoginRequest request)
         {
             if (ModelState.IsValid == false)
@@ -47,8 +47,7 @@ namespace Nexora.Controllers
             {
                 return Ok(new { Token = result.Value });
             }
-            return NotFound(new { Message = "User not found" });
+            return Unauthorized(new { Message = result.ErrorMessage });
         }
-
     }
 }

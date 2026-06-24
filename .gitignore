@@ -9,6 +9,7 @@
 
 .vs
 .idea
+.env
 
 # Build results
 [Dd]ebug/

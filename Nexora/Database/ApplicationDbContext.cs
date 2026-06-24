@@ -33,6 +33,54 @@ namespace Nexora.Database
             var transactionEntity = modelBuilder.Entity<Transaction>()
                 .ToTable(name: "transactions");
 
+            userEntity
+                .Property(x => x.Id)
+                .HasColumnName("id");
+
+            userEntity
+                .Property(x => x.Login)
+                .HasColumnName("login");
+
+            userEntity
+                .Property(x => x.Name)
+                .HasColumnName("name");
+
+            userEntity
+                .Property(x => x.PasswordHash)
+                .HasColumnName("password_hash");
+
+            accountEntity
+                .Property(x => x.Id)
+                .HasColumnName("id");
+
+            accountEntity
+                .Property(x => x.UserId)
+                .HasColumnName("user_id");
+
+            sessionEntity
+                .Property(x => x.UserId)
+                .HasColumnName("user_id");
+
+            sessionEntity
+                .Property(x => x.Token)
+                .HasColumnName("token");
+
+            sessionEntity
+                .Property(x => x.ExpiresAt)
+                .HasColumnName("expires_at");
+
+            transactionEntity
+                .Property(x => x.Id)
+                .HasColumnName("id");
+
+            transactionEntity
+                .Property(x => x.SenderAccountId)
+                .HasColumnName("sender_account_id");
+
+            transactionEntity
+                .Property(x => x.ReceiverAccountId)
+                .HasColumnName("receiver_account_id");
+
             userEntity.HasKey(x => x.Id);
             accountEntity.HasKey(x => x.Id);
             sessionEntity.HasKey(x => x.UserId);
@@ -65,15 +113,18 @@ namespace Nexora.Database
 
             transactionEntity
                 .Property(x => x.Amount)
-                .HasPrecision(18, 2);
+                .HasPrecision(18, 2)
+                .HasColumnName("amount");
 
             transactionEntity
-                .Property( x => x.CreatedAt)
+                .Property(x => x.CreatedAt)
+                .HasColumnName("created_at")
                 .HasDefaultValueSql("now()");
 
             accountEntity
                 .Property(x => x.Balance)
-                .HasPrecision(18, 2);
+                .HasPrecision(18, 2)
+                .HasColumnName("balance");
 
             userEntity
                 .HasIndex(x => x.Login)
@@ -99,14 +150,14 @@ namespace Nexora.Database
                 }
             );
         }
-        
+
         private void SeedAccountData(EntityTypeBuilder<Account> accountEntity)
         {
             accountEntity.HasData(
                 new Account
                 {
                     Id = 1,
-                    UserId =  1,
+                    UserId = 1,
                     Balance = 1000,
                 },
                 new Account

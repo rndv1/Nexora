@@ -8,7 +8,7 @@ namespace Nexora.Services;
 public class FinanceService : IFinanceService
 {
     private readonly ApplicationDbContext _dbContext;
-    
+
     public FinanceService(ApplicationDbContext dbContext)
     {
         _dbContext = dbContext;
@@ -19,14 +19,14 @@ public class FinanceService : IFinanceService
         var user = await _dbContext.Users.FirstOrDefaultAsync(predicate: u => u.Id == userId);
         if (user == null)
         {
-            return Result<decimal>.Failure("Пользователь не найден");
+            return Result<decimal>.Failure("User not found");
         }
         var account = await _dbContext.Accounts.FirstOrDefaultAsync(predicate: a => a.UserId == user.Id);
         if (account == null)
         {
-            return Result<decimal>.Failure("Аккаунт не найден");
+            return Result<decimal>.Failure("Account not found");
         }
-        return Result <decimal>.Success(account.Balance);
+        return Result<decimal>.Success(account.Balance);
     }
 
     public async Task<Result> DepositAsync(int userId, decimal amount)
@@ -34,16 +34,16 @@ public class FinanceService : IFinanceService
         var user = await _dbContext.Users.FirstOrDefaultAsync(predicate: u => u.Id == userId);
         if (user == null)
         {
-            return Result<decimal>.Failure("Пользователь не найден");
+            return Result.Failure("User not found");
         }
         var account = await _dbContext.Accounts.FirstOrDefaultAsync(predicate: a => a.UserId == user.Id);
         if (account == null)
         {
-            return Result<decimal>.Failure("Аккаунт не найден");
+            return Result.Failure("Account not found");
         }
 
         account.Balance += amount;
-        
+
         await _dbContext.SaveChangesAsync();
         return Result.Success();
     }
@@ -54,27 +54,27 @@ public class FinanceService : IFinanceService
 
         if (fromUser == null)
         {
-            return Result.Failure("Пользователь не найден");
+            return Result.Failure("User not found");
         }
         var fromAccount = await _dbContext.Accounts.FirstOrDefaultAsync(a => a.UserId == fromUser.Id);
 
         if (fromAccount == null)
         {
-            return Result.Failure("Аккаунт не найден"); 
+            return Result.Failure("Account not found");
         }
         var toUser = await _dbContext.Users.FirstOrDefaultAsync(u => u.Login == receiverLogin);
         if (toUser == null)
         {
-            return Result.Failure("Получатель не найден");
+            return Result.Failure("Recipient not found");
         }
         var toAccount = await _dbContext.Accounts.FirstOrDefaultAsync(a => a.UserId == toUser.Id);
         if (toAccount == null)
         {
-            return Result.Failure("Аккаунт не найден"); 
+            return Result.Failure("Account not found");
         }
         if (fromAccount.Balance < amount)
         {
-            return Result.Failure("Недостаточно средств");
+            return Result.Failure("Insufficient funds");
         }
         fromAccount.Balance -= amount;
         toAccount.Balance += amount;
@@ -87,29 +87,34 @@ public class FinanceService : IFinanceService
             CreatedAt = DateTime.UtcNow
         };
         _dbContext.Transactions.Add(transaction);
-        
+
         await _dbContext.SaveChangesAsync();
         return Result.Success();
     }
 
     public async Task<Result<List<TransactionHistoryResponse>>> GetTransactionHistoryAsync(int userId,
-        DateTime? dateFrom, DateTime? dateTo, int skip , int take)
+        DateTime? dateFrom, DateTime? dateTo, int skip, int take)
     {
+        if (dateFrom.HasValue && dateTo.HasValue && dateFrom.Value > dateTo.Value)
+        {
+            return Result<List<TransactionHistoryResponse>>.Failure("Invalid date range");
+        }
+
         var account = await _dbContext.Accounts.FirstOrDefaultAsync(a => a.UserId == userId);
 
         if (account == null)
         {
-            return Result<List<TransactionHistoryResponse>>.Failure("Аккаунт не найден");
+            return Result<List<TransactionHistoryResponse>>.Failure("Account not found");
         }
-        
-        var transactions = _dbContext.Transactions.Where(x => x.SenderAccountId 
+
+        var transactions = _dbContext.Transactions.Where(x => x.SenderAccountId
             == account.Id || x.ReceiverAccountId == account.Id);
 
         if (dateFrom != null)
         {
             transactions = transactions.Where(x => x.CreatedAt >= dateFrom);
         }
-        
+
         if (dateTo != null)
         {
             transactions = transactions.Where(x => x.CreatedAt <= dateTo);
@@ -117,7 +122,7 @@ public class FinanceService : IFinanceService
         transactions = transactions.OrderBy(x => x.CreatedAt).Skip(skip).Take(take);
 
         var dbTransactions = await transactions.ToListAsync();
-        
+
         var result = new List<TransactionHistoryResponse>();
         var allSender = dbTransactions.Select(x => x.SenderAccountId).Distinct().ToList();
         var allReceiver = dbTransactions.Select(x => x.ReceiverAccountId).Distinct().ToList();
@@ -135,7 +140,7 @@ public class FinanceService : IFinanceService
                 Name = u.Name,
                 AccId = acc.Id
             }).ToDictionaryAsync(x => x.AccId);
-        
+
         foreach (var transaction in dbTransactions)
         {
             var senderName = names[transaction.SenderAccountId].Name;

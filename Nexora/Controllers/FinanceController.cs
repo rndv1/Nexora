@@ -11,7 +11,7 @@ namespace Nexora.Controllers
     public class FinanceController : Controller
     {
         private readonly IFinanceService _financeService;
-        
+
         public FinanceController(IFinanceService financeService)
         {
             _financeService = financeService;
@@ -35,7 +35,7 @@ namespace Nexora.Controllers
         public async Task<IActionResult> DepositAsync([FromBody] DepositRequest request)
         {
             var depositResult = await _financeService.DepositAsync(
-                GetUserId(), 
+                GetUserId(),
                 request.Amount);
             if (depositResult.IsSuccess)
             {
@@ -49,8 +49,8 @@ namespace Nexora.Controllers
         {
             var transferResult =
                 await _financeService.TransferAsync(
-                    GetUserId(), 
-                    request.ReceiverLogin, 
+                    GetUserId(),
+                    request.ReceiverLogin,
                     request.Amount);
             if (transferResult.IsSuccess)
             {
@@ -60,7 +60,7 @@ namespace Nexora.Controllers
         }
 
         [HttpGet("history")]
-        public async Task<IActionResult> GetTransactionHistoryAsync([FromQuery]TransactionHistoryRequest request)
+        public async Task<IActionResult> GetTransactionHistoryAsync([FromQuery] TransactionHistoryRequest request)
         {
             var historyResult = await _financeService.GetTransactionHistoryAsync(
                 GetUserId(),

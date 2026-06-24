@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi;
+using Nexora.BackgroundServices;
 using Nexora.Database;
 using Nexora.Middlewares;
 using Nexora.Services;
@@ -16,7 +17,7 @@ namespace Nexora
             var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
                 ?? throw new InvalidOperationException("ConnectionString 'DefaultConnection' not found");
 
-            builder.Services.AddDbContext<ApplicationDbContext>(options => 
+            builder.Services.AddDbContext<ApplicationDbContext>(options =>
                options.UseNpgsql(connectionString));
             builder.Services.AddScoped<IUserService, UserService>();
             builder.Services.AddScoped<IFinanceService, FinanceService>();
@@ -27,13 +28,13 @@ namespace Nexora
                 options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
                 {
                     Name = "Authorization",
-                    Description = "Please insert api token",
+                    Description = "Enter the API token. Swagger adds the Bearer prefix automatically.",
                     In = ParameterLocation.Header,
                     Type = SecuritySchemeType.Http,
                     Scheme = "bearer",
                     BearerFormat = "Token",
                 });
-                
+
                 options.AddSecurityRequirement(document => new OpenApiSecurityRequirement
                 {
                     [new OpenApiSecuritySchemeReference("Bearer", document)] = []
@@ -44,12 +45,8 @@ namespace Nexora
             builder.Services.AddHostedService<SessionCleanupService>();
 
             var app = builder.Build();
-            var scopeContainer = app.Services.CreateScope();
-            using (scopeContainer)
-            {
-                var dbContainer = scopeContainer.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-                await dbContainer.Database.MigrateAsync();
-            }
+
+            await MigrateDatabaseAsync(app);
 
             if (app.Environment.IsDevelopment())
             {
@@ -57,15 +54,28 @@ namespace Nexora
                 app.UseSwaggerUI();
             }
 
-            app.UseHttpsRedirection();
+            if (!app.Environment.IsDevelopment())
+            {
+                app.UseHttpsRedirection();
+            }
 
             app.UseRouting();
-            
+
             app.UseMiddleware<AuthorizationMiddleware>();
-            
+
             app.MapControllers();
 
-            app.Run();
+            await app.RunAsync();
+        }
+
+        private static async Task MigrateDatabaseAsync(WebApplication app)
+        {
+            await using var scope = app.Services.CreateAsyncScope();
+
+            var dbContext = scope.ServiceProvider
+                .GetRequiredService<ApplicationDbContext>();
+
+            await dbContext.Database.MigrateAsync();
         }
     }
 }

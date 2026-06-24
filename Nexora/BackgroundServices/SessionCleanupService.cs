@@ -1,12 +1,12 @@
-﻿using Nexora.Database;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
+using Nexora.Database;
 
-namespace Nexora.Services;
+namespace Nexora.BackgroundServices;
 
 public class SessionCleanupService : BackgroundService
 {
     private static readonly TimeSpan Delay = TimeSpan.FromMinutes(10);
-    
+
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly ILogger<SessionCleanupService> _logger;
 
@@ -15,7 +15,7 @@ public class SessionCleanupService : BackgroundService
         _scopeFactory = scopeFactory;
         _logger = logger;
     }
-    
+
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         while (!stoppingToken.IsCancellationRequested)
@@ -30,10 +30,15 @@ public class SessionCleanupService : BackgroundService
                 var deleteCount = await db.Sessions
                     .Where(x => x.ExpiresAt < now)
                     .ExecuteDeleteAsync(stoppingToken);
-                
+
                 _logger.LogInformation(
                     "Deleted {DeleteCount} expired sessions",
                     deleteCount);
+            }
+            catch (OperationCanceledException)
+                when (stoppingToken.IsCancellationRequested)
+            {
+                break;
             }
             catch (Exception ex)
             {

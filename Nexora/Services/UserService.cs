@@ -15,7 +15,7 @@ namespace Nexora.Services
             _context = context;
         }
 
-        public async Task<Result> RegisterAsync(string login, string name, string password) 
+        public async Task<Result> RegisterAsync(string login, string name, string password)
         {
 
             var existing = await _context.Users.FirstOrDefaultAsync(predicate: x => x.Login == login);
@@ -43,9 +43,9 @@ namespace Nexora.Services
 
         public async Task<Result<string>> LoginAsync(string login, string password)
         {
-            var user = await _context.Users.FirstOrDefaultAsync(predicate: x => x.Login == login && x.PasswordHash == 
+            var user = await _context.Users.FirstOrDefaultAsync(predicate: x => x.Login == login && x.PasswordHash ==
              password);
-            if(user == null)
+            if (user == null)
             {
                 return Result<string>.Failure("Invalid login or password");
             }
@@ -60,7 +60,7 @@ namespace Nexora.Services
             var existingSession = await _context.Sessions.FirstOrDefaultAsync(predicate: x => x.UserId == user.Id);
             if (existingSession != null)
             {
-                existingSession.Token = session.Token; 
+                existingSession.Token = session.Token;
                 existingSession.ExpiresAt = session.ExpiresAt;
                 await _context.SaveChangesAsync();
             }

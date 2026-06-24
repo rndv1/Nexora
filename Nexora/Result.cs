@@ -6,8 +6,8 @@
 
         public static Result<T> Success(T value) => new() { Value = value, IsSuccess = true };
         public static new Result<T> Failure(string errorMessage) => new() { IsSuccess = false, ErrorMessage = errorMessage };
-        
-        
+
+
         public static implicit operator Result<T>(T value) => Success(value);
     }
 

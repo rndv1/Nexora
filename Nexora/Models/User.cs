@@ -9,4 +9,4 @@
         public Account? Account { get; set; }
         public Session? Session { get; set; }
     }
-}   
+}
