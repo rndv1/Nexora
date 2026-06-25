@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using FluentValidation;
+using Microsoft.AspNetCore.Mvc;
 using Nexora.Attributes;
 using Nexora.DTOs.Finance;
 using Nexora.Services;
@@ -32,8 +33,14 @@ namespace Nexora.Controllers
         }
 
         [HttpPost("deposit")]
-        public async Task<IActionResult> DepositAsync([FromBody] DepositRequest request)
+        public async Task<IActionResult> DepositAsync([FromBody] DepositRequest request, [FromServices] IValidator<DepositRequest> validator)
         {
+            var validationResult = await validator.ValidateAsync(request);
+            if (!validationResult.IsValid)
+            {
+                return BadRequest(validationResult.ToDictionary());
+            }
+
             var depositResult = await _financeService.DepositAsync(
                 GetUserId(),
                 request.Amount);
@@ -45,12 +52,18 @@ namespace Nexora.Controllers
         }
 
         [HttpPost("transfer")]
-        public async Task<IActionResult> TransferAsync([FromBody] TransferRequest request)
+        public async Task<IActionResult> TransferAsync([FromBody] TransferRequest request, [FromServices] IValidator<TransferRequest> validator)
         {
+            var validationResult = await validator.ValidateAsync(request);
+            if (!validationResult.IsValid)
+            {
+                return BadRequest(validationResult.ToDictionary());
+            }
+
             var transferResult =
                 await _financeService.TransferAsync(
                     GetUserId(),
-                    request.ReceiverLogin,
+                    request.ReceiverLogin!,
                     request.Amount);
             if (transferResult.IsSuccess)
             {
@@ -60,8 +73,14 @@ namespace Nexora.Controllers
         }
 
         [HttpGet("history")]
-        public async Task<IActionResult> GetTransactionHistoryAsync([FromQuery] TransactionHistoryRequest request)
+        public async Task<IActionResult> GetTransactionHistoryAsync([FromQuery] TransactionHistoryRequest request, [FromServices] IValidator<TransactionHistoryRequest> validator)
         {
+            var validationResult = await validator.ValidateAsync(request);
+            if (!validationResult.IsValid)
+            {
+                return BadRequest(validationResult.ToDictionary());
+            }
+
             var historyResult = await _financeService.GetTransactionHistoryAsync(
                 GetUserId(),
                 request.From,

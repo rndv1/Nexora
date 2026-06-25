@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using FluentValidation;
+using Microsoft.AspNetCore.Mvc;
 using Nexora.DTOs;
 using Nexora.DTOs.User;
 using Nexora.Services;
@@ -18,15 +19,16 @@ namespace Nexora.Controllers
         }
 
         [HttpPost("register")] // POST api/user/register
-        public async Task<IActionResult> Register([FromBody] RegisterRequest request)
+        public async Task<IActionResult> Register([FromBody] RegisterRequest request, [FromServices] IValidator<RegisterRequest> validator)
         {
-            if (ModelState.IsValid == false)
+            var validationResult = await validator.ValidateAsync(request);
+            if (!validationResult.IsValid)
             {
-                return BadRequest(ModelState);
+                return BadRequest(validationResult.ToDictionary());
             }
 
-            var result = await _userService.RegisterAsync(request.Login, request.Name,
-                request.PasswordHash);
+            var result = await _userService.RegisterAsync(request.Login!, request.Name!,
+                request.PasswordHash!);
             if (result)
             {
                 return Ok();
@@ -35,14 +37,15 @@ namespace Nexora.Controllers
         }
 
         [HttpPost("login")]
-        public async Task<IActionResult> LoginAsync([FromBody] LoginRequest request)
+        public async Task<IActionResult> LoginAsync([FromBody] LoginRequest request, [FromServices] IValidator<LoginRequest> validator)
         {
-            if (ModelState.IsValid == false)
+            var validationResult = await validator.ValidateAsync(request);
+            if (!validationResult.IsValid)
             {
-                return BadRequest(ModelState);
+                return BadRequest(validationResult.ToDictionary());
             }
 
-            var result = await _userService.LoginAsync(request.Login, request.PasswordHash);
+            var result = await _userService.LoginAsync(request.Login!, request.PasswordHash!);
             if (result)
             {
                 return Ok(new { Token = result.Value });

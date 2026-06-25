@@ -1,7 +1,9 @@
+using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi;
 using Nexora.BackgroundServices;
 using Nexora.Database;
+using Nexora.DTOs.Validators;
 using Nexora.Middlewares;
 using Nexora.Services;
 
@@ -40,6 +42,8 @@ namespace Nexora
                     [new OpenApiSecuritySchemeReference("Bearer", document)] = []
                 });
             });
+
+            builder.Services.AddValidatorsFromAssemblyContaining<LoginRequestValidator>();
 
             builder.Services.AddControllers();
             builder.Services.AddHostedService<SessionCleanupService>();

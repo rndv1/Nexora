@@ -31,6 +31,10 @@ public class FinanceService : IFinanceService
 
     public async Task<Result> DepositAsync(int userId, decimal amount)
     {
+        if (amount <= 0)
+        {
+            return Result.Failure("Deposit amount must be greater than 0");
+        }
         var user = await _dbContext.Users.FirstOrDefaultAsync(predicate: u => u.Id == userId);
         if (user == null)
         {
@@ -50,6 +54,16 @@ public class FinanceService : IFinanceService
 
     public async Task<Result> TransferAsync(int fromUserId, string receiverLogin, decimal amount)
     {
+        if (amount <= 0)
+        {
+            return Result.Failure("Transfer amount must be greater than 0");
+        }
+
+        if (string.IsNullOrWhiteSpace(receiverLogin))
+        {
+            return Result.Failure("Receiver login is required");
+        }
+
         var fromUser = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == fromUserId);
 
         if (fromUser == null)
@@ -95,9 +109,19 @@ public class FinanceService : IFinanceService
     public async Task<Result<List<TransactionHistoryResponse>>> GetTransactionHistoryAsync(int userId,
         DateTime? dateFrom, DateTime? dateTo, int skip, int take)
     {
+        if (skip < 0)
+        {
+            return Result<List<TransactionHistoryResponse>>.Failure("Offset cannot be negative");
+        }
+
+        if (take is < 1 or > 100)
+        {
+            return Result<List<TransactionHistoryResponse>>.Failure("Limit must be between 1 and 100");
+        }
+
         if (dateFrom.HasValue && dateTo.HasValue && dateFrom.Value > dateTo.Value)
         {
-            return Result<List<TransactionHistoryResponse>>.Failure("Invalid date range");
+            return Result<List<TransactionHistoryResponse>>.Failure("From date must not be later than To date");
         }
 
         var account = await _dbContext.Accounts.FirstOrDefaultAsync(a => a.UserId == userId);
