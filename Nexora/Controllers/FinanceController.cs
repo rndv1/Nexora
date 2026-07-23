@@ -1,8 +1,12 @@
-﻿using FluentValidation;
+using FluentValidation;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Nexora.Attributes;
 using Nexora.DTOs.Finance;
-using Nexora.Services;
+using Nexora.Features.Finance.Deposit;
+using Nexora.Features.Finance.GetBalance;
+using Nexora.Features.Finance.GetTransactionHistory;
+using Nexora.Features.Finance.Transfer;
 
 namespace Nexora.Controllers
 {
@@ -11,17 +15,17 @@ namespace Nexora.Controllers
     [MyAuthorize]
     public class FinanceController : Controller
     {
-        private readonly IFinanceService _financeService;
+        private readonly IMediator _mediator;
 
-        public FinanceController(IFinanceService financeService)
+        public FinanceController(IMediator mediator)
         {
-            _financeService = financeService;
+            _mediator = mediator;
         }
 
         [HttpGet("balance")]
         public async Task<IActionResult> GetBalanceAsync()
         {
-            var balanceResult = await _financeService.GetBalanceAsync(GetUserId());
+            var balanceResult = await _mediator.Send(new GetBalanceQuery(GetUserId()));
             if (balanceResult.IsSuccess)
             {
                 return Ok(new BalanceResponse
@@ -29,11 +33,14 @@ namespace Nexora.Controllers
                     Balance = balanceResult.Value
                 });
             }
+
             return BadRequest(new { Message = balanceResult.ErrorMessage });
         }
 
         [HttpPost("deposit")]
-        public async Task<IActionResult> DepositAsync([FromBody] DepositRequest request, [FromServices] IValidator<DepositRequest> validator)
+        public async Task<IActionResult> DepositAsync(
+            [FromBody] DepositRequest request,
+            [FromServices] IValidator<DepositRequest> validator)
         {
             var validationResult = await validator.ValidateAsync(request);
             if (!validationResult.IsValid)
@@ -41,18 +48,19 @@ namespace Nexora.Controllers
                 return BadRequest(validationResult.ToDictionary());
             }
 
-            var depositResult = await _financeService.DepositAsync(
-                GetUserId(),
-                request.Amount);
+            var depositResult = await _mediator.Send(new DepositCommand(GetUserId(), request.Amount));
             if (depositResult.IsSuccess)
             {
                 return Ok();
             }
+
             return BadRequest(new { Message = depositResult.ErrorMessage });
         }
 
         [HttpPost("transfer")]
-        public async Task<IActionResult> TransferAsync([FromBody] TransferRequest request, [FromServices] IValidator<TransferRequest> validator)
+        public async Task<IActionResult> TransferAsync(
+            [FromBody] TransferRequest request,
+            [FromServices] IValidator<TransferRequest> validator)
         {
             var validationResult = await validator.ValidateAsync(request);
             if (!validationResult.IsValid)
@@ -60,20 +68,20 @@ namespace Nexora.Controllers
                 return BadRequest(validationResult.ToDictionary());
             }
 
-            var transferResult =
-                await _financeService.TransferAsync(
-                    GetUserId(),
-                    request.ReceiverLogin!,
-                    request.Amount);
+            var transferResult = await _mediator.Send(
+                new TransferCommand(GetUserId(), request.ReceiverLogin!, request.Amount));
             if (transferResult.IsSuccess)
             {
                 return Ok();
             }
+
             return BadRequest(new { Message = transferResult.ErrorMessage });
         }
 
         [HttpGet("history")]
-        public async Task<IActionResult> GetTransactionHistoryAsync([FromQuery] TransactionHistoryRequest request, [FromServices] IValidator<TransactionHistoryRequest> validator)
+        public async Task<IActionResult> GetTransactionHistoryAsync(
+            [FromQuery] TransactionHistoryRequest request,
+            [FromServices] IValidator<TransactionHistoryRequest> validator)
         {
             var validationResult = await validator.ValidateAsync(request);
             if (!validationResult.IsValid)
@@ -81,16 +89,13 @@ namespace Nexora.Controllers
                 return BadRequest(validationResult.ToDictionary());
             }
 
-            var historyResult = await _financeService.GetTransactionHistoryAsync(
-                GetUserId(),
-                request.From,
-                request.To,
-                request.Offset,
-                request.Limit);
+            var historyResult = await _mediator.Send(
+                new GetTransactionHistoryQuery(GetUserId(), request.From, request.To, request.Offset, request.Limit));
             if (historyResult.IsSuccess)
             {
                 return Ok(historyResult.Value);
             }
+
             return BadRequest(new { Message = historyResult.ErrorMessage });
         }
 

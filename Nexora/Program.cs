@@ -5,7 +5,6 @@ using Nexora.BackgroundServices;
 using Nexora.Database;
 using Nexora.DTOs.Validators;
 using Nexora.Middlewares;
-using Nexora.Services;
 
 namespace Nexora
 {
@@ -19,10 +18,13 @@ namespace Nexora
             var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
                 ?? throw new InvalidOperationException("ConnectionString 'DefaultConnection' not found");
 
+            builder.Services.AddMediatR(cfg =>
+            {
+                cfg.RegisterServicesFromAssembly(typeof(Program).Assembly);
+            });
+
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
                options.UseNpgsql(connectionString));
-            builder.Services.AddScoped<IUserService, UserService>();
-            builder.Services.AddScoped<IFinanceService, FinanceService>();
 
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen(options =>
