@@ -7,10 +7,12 @@ namespace Nexora.Features.Finance.GetBalance;
 public class GetBalanceQuery : IRequest<Result<decimal>>
 {
     public int UserId { get; set; }
+    public string Currency { get; set; }
 
-    public GetBalanceQuery(int userId)
+    public GetBalanceQuery(int userId, string currency)
     {
         UserId = userId;
+        Currency = currency;
     }
 }
 
@@ -34,7 +36,7 @@ public class GetBalanceQueryHandler : IRequestHandler<GetBalanceQuery, Result<de
         }
 
         var account = await _dbContext.Accounts.FirstOrDefaultAsync(
-            a => a.UserId == user.Id,
+            a => a.UserId == user.Id && a.Currency == request.Currency,
             cancellationToken);
         if (account == null)
         {

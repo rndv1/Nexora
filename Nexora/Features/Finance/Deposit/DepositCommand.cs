@@ -8,11 +8,13 @@ public class DepositCommand : IRequest<Result>
 {
     public int UserId { get; set; }
     public decimal Amount { get; set; }
+    public string Currency { get; set; }
 
-    public DepositCommand(int userId, decimal amount)
+    public DepositCommand(int userId, decimal amount, string currency)
     {
         UserId = userId;
         Amount = amount;
+        Currency = currency;
     }
 }
 
@@ -41,7 +43,7 @@ public class DepositCommandHandler : IRequestHandler<DepositCommand, Result>
         }
 
         var account = await _dbContext.Accounts.FirstOrDefaultAsync(
-            a => a.UserId == user.Id,
+            a => a.UserId == user.Id && a.Currency == request.Currency,
             cancellationToken);
         if (account == null)
         {

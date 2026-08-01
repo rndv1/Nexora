@@ -52,16 +52,17 @@ public class GetTransactionHistoryQueryHandler
             return Result<List<TransactionHistoryResponse>>.Failure("From date must not be later than To date");
         }
 
-        var account = await _dbContext.Accounts.FirstOrDefaultAsync(
-            a => a.UserId == request.UserId,
-            cancellationToken);
-        if (account == null)
+        var accountIds = await _dbContext.Accounts
+            .Where(a => a.UserId == request.UserId)
+            .Select(a => a.Id)
+            .ToListAsync(cancellationToken);
+        if (accountIds.Count == 0)
         {
             return Result<List<TransactionHistoryResponse>>.Failure("Account not found");
         }
 
         var transactions = _dbContext.Transactions.Where(
-            x => x.SenderAccountId == account.Id || x.ReceiverAccountId == account.Id);
+            x => accountIds.Contains(x.SenderAccountId) || accountIds.Contains(x.ReceiverAccountId));
 
         if (request.DateFrom != null)
         {
@@ -93,7 +94,7 @@ public class GetTransactionHistoryQueryHandler
             u => u.Id,
             (acc, u) => new
             {
-                Name = u.Name,
+                u.Name,
                 AccId = acc.Id
             }).ToDictionaryAsync(x => x.AccId, cancellationToken);
 
@@ -106,7 +107,8 @@ public class GetTransactionHistoryQueryHandler
                 SenderName = senderName,
                 ReceiverName = receiverName,
                 Amount = transaction.Amount,
-                Date = transaction.CreatedAt
+                Date = transaction.CreatedAt,
+                Currency = transaction.Currency,
             });
         }
 

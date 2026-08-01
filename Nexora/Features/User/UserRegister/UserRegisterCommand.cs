@@ -42,12 +42,17 @@ public class UserRegisterCommandHandler : IRequestHandler<UserRegisterCommand, R
         {
             Login = request.Login,
             Name = request.Name,
-            PasswordHash = request.PasswordHash,
-            Account = new Account
-            {
-                Balance = 0
-            }
+            PasswordHash = request.PasswordHash
         };
+
+        foreach (var currency in Currency.All)
+        {
+            user.Accounts.Add(new Account
+                {
+                    Balance = 0,
+                    Currency = currency
+                });
+        }
 
         _context.Users.Add(user);
         await _context.SaveChangesAsync(cancellationToken);

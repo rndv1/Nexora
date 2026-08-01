@@ -56,6 +56,11 @@ namespace Nexora.Database
             accountEntity
                 .Property(x => x.UserId)
                 .HasColumnName("user_id");
+            accountEntity
+                .Property(x => x.Currency)
+                .HasColumnName("currency")
+                .IsRequired()
+                .HasDefaultValue(Currency.RUB);
 
             sessionEntity
                 .Property(x => x.UserId)
@@ -81,6 +86,12 @@ namespace Nexora.Database
                 .Property(x => x.ReceiverAccountId)
                 .HasColumnName("receiver_account_id");
 
+            transactionEntity
+                .Property(x => x.Currency)
+                .HasColumnName("currency")
+                .IsRequired()
+                .HasDefaultValue(Currency.RUB);
+
             userEntity.HasKey(x => x.Id);
             accountEntity.HasKey(x => x.Id);
             sessionEntity.HasKey(x => x.UserId);
@@ -90,9 +101,13 @@ namespace Nexora.Database
             SeedAccountData(accountEntity);
 
             userEntity
-                .HasOne(x => x.Account)
+                .HasMany(x => x.Accounts)
                 .WithOne(x => x.User)
-                .HasForeignKey<Account>(x => x.UserId);
+                .HasForeignKey(x => x.UserId);
+
+            accountEntity
+                .HasIndex(x => new { x.UserId, x.Currency })
+                .IsUnique();
 
             userEntity
                 .HasOne(x => x.Session)
@@ -159,12 +174,14 @@ namespace Nexora.Database
                     Id = 1,
                     UserId = 1,
                     Balance = 1000,
+                    Currency = Currency.RUB,
                 },
                 new Account
                 {
                     Id = 2,
                     UserId = 2,
                     Balance = 2000,
+                    Currency = Currency.RUB,
                 }
             );
         }

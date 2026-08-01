@@ -6,7 +6,7 @@
         public string Login { get; set; } = string.Empty;
         public string Name { get; set; } = string.Empty;
         public string PasswordHash { get; set; } = string.Empty;
-        public Account? Account { get; set; }
+        public ICollection<Account> Accounts { get; set; } = new List<Account>();
         public Session? Session { get; set; }
     }
 }

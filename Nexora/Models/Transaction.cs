@@ -10,6 +10,8 @@
         public DateTime CreatedAt { get; set; }
         public decimal Amount { get; set; }
 
+        public string Currency { get; set; } = string.Empty;
+
         public Account? SenderAccount { get; set; }
         public Account? ReceiverAccount { get; set; }
     }

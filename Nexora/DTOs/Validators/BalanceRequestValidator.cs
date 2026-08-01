@@ -4,12 +4,10 @@ using Nexora.Models;
 
 namespace Nexora.DTOs.Validators;
 
-public class DepositRequestValidator : AbstractValidator<DepositRequest>
+public class BalanceRequestValidator : AbstractValidator<BalanceRequest>
 {
-    public DepositRequestValidator()
+    public BalanceRequestValidator()
     {
-        RuleFor(x => x.Amount)
-            .GreaterThan(0).WithMessage("Amount must be greater than 0");
         RuleFor(x => x.Currency)
             .NotEmpty().WithMessage("Currency is required")
             .Must(currency => currency is not null && Currency.All.Contains(currency))

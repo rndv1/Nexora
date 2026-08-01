@@ -23,14 +23,23 @@ namespace Nexora.Controllers
         }
 
         [HttpGet("balance")]
-        public async Task<IActionResult> GetBalanceAsync()
+        public async Task<IActionResult> GetBalanceAsync(
+            [FromQuery] BalanceRequest request,
+            [FromServices] IValidator<BalanceRequest> validator)
         {
-            var balanceResult = await _mediator.Send(new GetBalanceQuery(GetUserId()));
+            var validationResult = await validator.ValidateAsync(request);
+            if (!validationResult.IsValid)
+            {
+                return BadRequest(validationResult.ToDictionary());
+            }
+
+            var balanceResult = await _mediator.Send(new GetBalanceQuery(GetUserId(), request.Currency!));
             if (balanceResult.IsSuccess)
             {
                 return Ok(new BalanceResponse
                 {
-                    Balance = balanceResult.Value
+                    Balance = balanceResult.Value,
+                    Currency = request.Currency!
                 });
             }
 
@@ -48,7 +57,7 @@ namespace Nexora.Controllers
                 return BadRequest(validationResult.ToDictionary());
             }
 
-            var depositResult = await _mediator.Send(new DepositCommand(GetUserId(), request.Amount));
+            var depositResult = await _mediator.Send(new DepositCommand(GetUserId(), request.Amount, request.Currency!));
             if (depositResult.IsSuccess)
             {
                 return Ok();
@@ -69,7 +78,7 @@ namespace Nexora.Controllers
             }
 
             var transferResult = await _mediator.Send(
-                new TransferCommand(GetUserId(), request.ReceiverLogin!, request.Amount));
+                new TransferCommand(GetUserId(), request.ReceiverLogin!, request.Amount, request.Currency!));
             if (transferResult.IsSuccess)
             {
                 return Ok();

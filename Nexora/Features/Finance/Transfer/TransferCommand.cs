@@ -10,12 +10,14 @@ public class TransferCommand : IRequest<Result>
     public int FromUserId { get; set; }
     public string ReceiverLogin { get; set; }
     public decimal Amount { get; set; }
+    public string Currency { get; set; }
 
-    public TransferCommand(int fromUserId, string receiverLogin, decimal amount)
+    public TransferCommand(int fromUserId, string receiverLogin, decimal amount,string currency)
     {
         FromUserId = fromUserId;
         ReceiverLogin = receiverLogin;
         Amount = amount;
+        Currency = currency;
     }
 }
 
@@ -49,7 +51,7 @@ public class TransferCommandHandler : IRequestHandler<TransferCommand, Result>
         }
 
         var fromAccount = await _dbContext.Accounts.FirstOrDefaultAsync(
-            a => a.UserId == fromUser.Id,
+            a => a.UserId == fromUser.Id && a.Currency == request.Currency,
             cancellationToken);
         if (fromAccount == null)
         {
@@ -65,7 +67,7 @@ public class TransferCommandHandler : IRequestHandler<TransferCommand, Result>
         }
 
         var toAccount = await _dbContext.Accounts.FirstOrDefaultAsync(
-            a => a.UserId == toUser.Id,
+            a => a.UserId == toUser.Id && a.Currency == request.Currency,
             cancellationToken);
         if (toAccount == null)
         {
@@ -85,7 +87,8 @@ public class TransferCommandHandler : IRequestHandler<TransferCommand, Result>
             ReceiverAccountId = toAccount.Id,
             SenderAccountId = fromAccount.Id,
             Amount = request.Amount,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
+            Currency = request.Currency
         };
         _dbContext.Transactions.Add(transaction);
 
