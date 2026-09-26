@@ -1,3 +1,4 @@
+using AutoMapper;
 using FluentValidation;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -17,10 +18,12 @@ namespace Nexora.API.Controllers
     public class FinanceController : Controller
     {
         private readonly IMediator _mediator;
+        private readonly IMapper _mapper;
 
-        public FinanceController(IMediator mediator)
+        public FinanceController(IMediator mediator, IMapper mapper)
         {
             _mediator = mediator;
+            _mapper = mapper;
         }
 
         [HttpGet("balance")]
@@ -103,14 +106,7 @@ namespace Nexora.API.Controllers
                 new GetTransactionHistoryQuery(GetUserId(), request.From, request.To, request.Offset, request.Limit));
             if (historyResult.IsSuccess)
             {
-                var response = historyResult.Value!.Select(x => new TransactionHistoryResponse
-                {
-                    Date = x.Date,
-                    Amount = x.Amount,
-                    SenderName = x.SenderName,
-                    ReceiverName = x.ReceiverName,
-                    Currency = x.Currency
-                }).ToList();
+                var response = _mapper.Map<List<TransactionHistoryResponse>>(historyResult.Value);
                 return Ok(response);
             }
 

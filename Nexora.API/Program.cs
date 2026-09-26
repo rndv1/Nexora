@@ -59,6 +59,8 @@ namespace Nexora.API
 
             builder.Services.AddValidatorsFromAssemblyContaining<GetTransactionHistoryQueryValidator>();
 
+            builder.Services.AddAutoMapper(_ => {}, typeof(Program).Assembly);
+
 
             builder.Services.AddControllers();
             builder.Services.AddHostedService<SessionCleanupService>();
