@@ -21,11 +21,11 @@ public class UserRegisterCommandHandler : IRequestHandler<UserRegisterCommand, R
             return Result<bool>.Failure("User with this login already exists");
         }
 
-        var newUser = new Domain.Models.User
+        var newUser = new Nexora.Domain.Models.User
         {
             Login = request.Login,
             Name = request.Name,
-            PasswordHash = request.Password
+            PasswordHash = Nexora.Application.Utils.PasswordHasher.Hash(request.Password)
         };
 
         await _userRepository.AddUserAsync(newUser, cancellationToken);

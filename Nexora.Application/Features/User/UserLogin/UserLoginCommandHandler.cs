@@ -19,7 +19,7 @@ public class UserLoginCommandHandler : IRequestHandler<UserLoginCommand, Result<
     {
         var user = await _userRepository.GetUserByLoginAsync(request.Phone, cancellationToken);
 
-        if (user == null || user.PasswordHash != request.Password)
+        if (user == null || !Nexora.Application.Utils.PasswordHasher.Verify(request.Password, user.PasswordHash))
         {
             return Result<string>.Failure("Invalid phone or password");
         }

@@ -52,6 +52,16 @@ public class TransferCommandHandler : IRequestHandler<TransferCommand, Result>
         sourceAccount.Balance -= request.Amount;
         destAccount.Balance += request.Amount;
 
+        var transaction = new Nexora.Domain.Models.Transaction
+        {
+            SenderAccountId = sourceAccount.Id,
+            ReceiverAccountId = destAccount.Id,
+            Amount = request.Amount,
+            Currency = request.Currency,
+            CreatedAt = DateTime.UtcNow
+        };
+        await _accountRepository.AddTransactionAsync(transaction, cancellationToken);
+
         await _accountRepository.SaveChangesAsync(cancellationToken);
 
         return Result.Success();

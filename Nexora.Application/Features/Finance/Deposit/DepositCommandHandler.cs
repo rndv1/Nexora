@@ -27,6 +27,16 @@ public class DepositCommandHandler : IRequestHandler<DepositCommand, Result>
 
         account.Balance += request.Amount;
 
+        var transaction = new Nexora.Domain.Models.Transaction
+        {
+            ReceiverAccountId = account.Id,
+            SenderAccountId = account.Id, // Self-deposit
+            Amount = request.Amount,
+            Currency = request.Currency,
+            CreatedAt = DateTime.UtcNow
+        };
+        await _accountRepository.AddTransactionAsync(transaction, cancellationToken);
+
         await _accountRepository.SaveChangesAsync(cancellationToken);
 
         return Result.Success();
