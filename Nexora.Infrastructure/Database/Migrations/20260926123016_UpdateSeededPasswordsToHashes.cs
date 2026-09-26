@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
@@ -10,37 +10,23 @@ namespace Nexora.Database.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.UpdateData(
-                table: "users",
-                keyColumn: "id",
-                keyValue: 1,
-                column: "password_hash",
-                value: "ATn9zvX5QksEsVvWt0cjfQ==:4E+jtMuMQuEaDBKkA09KLD/Fe0A17AgV/zgJehhBJLw=");
-
-            migrationBuilder.UpdateData(
-                table: "users",
-                keyColumn: "id",
-                keyValue: 2,
-                column: "password_hash",
-                value: "/7BAthMALkzyCHQsoaFFXA==:7x7XdZMvXdK1JAAm0q0ZZcvkLcSTqL8EOuYjF5459KQ=");
+            migrationBuilder.Sql(
+                "UPDATE users SET password_hash = 'ATn9zvX5QksEsVvWt0cjfQ==:4E+jtMuMQuEaDBKkA09KLD/Fe0A17AgV/zgJehhBJLw=' WHERE id = 1 AND password_hash = 'password123456';"
+            );
+            migrationBuilder.Sql(
+                "UPDATE users SET password_hash = '/7BAthMALkzyCHQsoaFFXA==:7x7XdZMvXdK1JAAm0q0ZZcvkLcSTqL8EOuYjF5459KQ=' WHERE id = 2 AND password_hash = 'password';"
+            );
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.UpdateData(
-                table: "users",
-                keyColumn: "id",
-                keyValue: 1,
-                column: "password_hash",
-                value: "password123456");
-
-            migrationBuilder.UpdateData(
-                table: "users",
-                keyColumn: "id",
-                keyValue: 2,
-                column: "password_hash",
-                value: "password");
+            migrationBuilder.Sql(
+                "UPDATE users SET password_hash = 'password123456' WHERE id = 1 AND password_hash = 'ATn9zvX5QksEsVvWt0cjfQ==:4E+jtMuMQuEaDBKkA09KLD/Fe0A17AgV/zgJehhBJLw=';"
+            );
+            migrationBuilder.Sql(
+                "UPDATE users SET password_hash = 'password' WHERE id = 2 AND password_hash = '/7BAthMALkzyCHQsoaFFXA==:7x7XdZMvXdK1JAAm0q0ZZcvkLcSTqL8EOuYjF5459KQ=';"
+            );
         }
     }
 }

@@ -23,11 +23,20 @@ public static class PasswordHasher
         var parts = hashString.Split(':');
         if (parts.Length != 2) return false;
 
-        byte[] salt = Convert.FromBase64String(parts[0]);
-        byte[] originalHash = Convert.FromBase64String(parts[1]);
+        try
+        {
+            byte[] salt = Convert.FromBase64String(parts[0]);
+            byte[] originalHash = Convert.FromBase64String(parts[1]);
 
-        byte[] hashToVerify = Rfc2898DeriveBytes.Pbkdf2(password, salt, Iterations, Algorithm, KeySize);
+            if (salt.Length != SaltSize || originalHash.Length != KeySize) return false;
 
-        return CryptographicOperations.FixedTimeEquals(originalHash, hashToVerify);
+            byte[] hashToVerify = Rfc2898DeriveBytes.Pbkdf2(password, salt, Iterations, Algorithm, KeySize);
+
+            return CryptographicOperations.FixedTimeEquals(originalHash, hashToVerify);
+        }
+        catch (FormatException)
+        {
+            return false;
+        }
     }
 }
