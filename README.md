@@ -80,7 +80,7 @@ dotnet tool install --global dotnet-ef
 Приложение использует строку подключения `DefaultConnection`.
 
 Для локальной разработки рекомендуется создать файл
-`Nexora/appsettings.Development.json`:
+`Nexora.API/appsettings.Development.json`:
 
 ```json
 {
@@ -96,7 +96,7 @@ dotnet tool install --global dotnet-ef
 Применить все миграции:
 
 ```powershell
-dotnet ef database update --project Nexora
+dotnet ef database update -p Nexora.Infrastructure -s Nexora.API
 ```
 
 Миграции создают таблицы и добавляют тестовые данные:
@@ -112,32 +112,32 @@ dotnet ef database update --project Nexora
 
 ```powershell
 dotnet ef migrations add MigrationName `
-  --project Nexora `
+  -p Nexora.Infrastructure -s Nexora.API `
   --output-dir Database/Migrations
 ```
 
 Применить миграции:
 
 ```powershell
-dotnet ef database update --project Nexora
+dotnet ef database update -p Nexora.Infrastructure -s Nexora.API
 ```
 
 Посмотреть список и состояние миграций:
 
 ```powershell
-dotnet ef migrations list --project Nexora
+dotnet ef migrations list -p Nexora.Infrastructure -s Nexora.API
 ```
 
 Удалить последнюю миграцию, если она еще не применена:
 
 ```powershell
-dotnet ef migrations remove --project Nexora
+dotnet ef migrations remove -p Nexora.Infrastructure -s Nexora.API
 ```
 
 Откатить базу до выбранной миграции:
 
 ```powershell
-dotnet ef database update PreviousMigration --project Nexora
+dotnet ef database update PreviousMigration -p Nexora.Infrastructure -s Nexora.API
 ```
 
 ## Запуск
@@ -152,7 +152,7 @@ dotnet build
 Запустить API:
 
 ```powershell
-dotnet run --project Nexora
+dotnet run --project Nexora.API
 ```
 
 Стандартные адреса при локальном запуске:
@@ -165,7 +165,7 @@ dotnet run --project Nexora
 другой порт:
 
 ```powershell
-dotnet run --project Nexora --urls "http://localhost:5197"
+dotnet run --project Nexora.API --urls "http://localhost:5197"
 ```
 
 ## Авторизация
