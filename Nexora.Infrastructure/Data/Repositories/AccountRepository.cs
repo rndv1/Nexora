@@ -51,6 +51,16 @@ public class AccountRepository : IAccountRepository
 
     public async Task RollbackTransactionAsync(CancellationToken cancellationToken)
     {
-        await _dbContext.Database.RollbackTransactionAsync(cancellationToken);
+        if (_dbContext.Database.CurrentTransaction != null)
+        {
+            try
+            {
+                await _dbContext.Database.RollbackTransactionAsync(CancellationToken.None);
+            }
+            catch
+            {
+                // Ignore rollback exceptions to not mask the original exception
+            }
+        }
     }
 }

@@ -144,14 +144,14 @@ namespace Nexora.Database.Migrations
                             Id = 1,
                             Login = "admin",
                             Name = "Admin User",
-                            PasswordHash = "ATn9zvX5QksEsVvWt0cjfQ==:4E+jtMuMQuEaDBKkA09KLD/Fe0A17AgV/zgJehhBJLw="
+                            PasswordHash = "password123456"
                         },
                         new
                         {
                             Id = 2,
                             Login = "user",
                             Name = "Regular User",
-                            PasswordHash = "/7BAthMALkzyCHQsoaFFXA==:7x7XdZMvXdK1JAAm0q0ZZcvkLcSTqL8EOuYjF5459KQ="
+                            PasswordHash = "password"
                         });
                 });
 
