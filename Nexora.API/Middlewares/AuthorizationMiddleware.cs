@@ -1,0 +1,51 @@
+using Nexora.API.Attributes;
+using Nexora.Application.Interfaces;
+
+namespace Nexora.API.Middlewares;
+
+public class AuthorizationMiddleware
+{
+    private readonly RequestDelegate _next;
+
+    public AuthorizationMiddleware(RequestDelegate next)
+    {
+        _next = next;
+    }
+
+    public async Task InvokeAsync(HttpContext context, ISessionRepository sessionRepository)
+    {
+        var endpoint = context.GetEndpoint();
+        var attribute = endpoint?.Metadata.GetMetadata<MyAuthorizeAttribute>();
+        if (attribute == null)
+        {
+            await _next(context);
+            return;
+        }
+
+        var authorizationHeader = context.Request.Headers[Constants.Authorization].FirstOrDefault();
+
+        if (string.IsNullOrWhiteSpace(authorizationHeader))
+        {
+            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            return;
+        }
+
+        var token = authorizationHeader.Split(" ").Last();
+        if (string.IsNullOrEmpty(token))
+        {
+            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            return;
+        }
+
+        var session = await sessionRepository.GetByTokenAsync(token, context.RequestAborted);
+        if (session == null || session.ExpiresAt < DateTime.UtcNow)
+        {
+            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            return;
+        }
+
+        context.Items[Constants.UserIdContextParameterName] = session.UserId;
+
+        await _next(context);
+    }
+}
