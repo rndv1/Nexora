@@ -19,27 +19,39 @@ public class DepositCommandHandler : IRequestHandler<DepositCommand, Result>
             return Result.Failure("Deposit amount must be greater than 0");
         }
 
-        var account = await _accountRepository.GetAccountByUserIdAndCurrencyAsync(request.UserId, request.Currency, cancellationToken);
-        if (account == null)
+        try
         {
-            return Result.Failure("Account not found");
+            await _accountRepository.BeginTransactionAsync(cancellationToken);
+
+            var account = await _accountRepository.GetAccountByUserIdAndCurrencyAsync(request.UserId, request.Currency, cancellationToken);
+            if (account == null)
+            {
+                await _accountRepository.RollbackTransactionAsync(cancellationToken);
+                return Result.Failure("Account not found");
+            }
+
+            account.Balance += request.Amount;
+
+            var transaction = new Nexora.Domain.Models.Transaction
+            {
+                ReceiverAccountId = account.Id,
+                SenderAccountId = account.Id, // Self-deposit
+                Amount = request.Amount,
+                Currency = request.Currency,
+                CreatedAt = DateTime.UtcNow
+            };
+            await _accountRepository.AddTransactionAsync(transaction, cancellationToken);
+
+            await _accountRepository.SaveChangesAsync(cancellationToken);
+            await _accountRepository.CommitTransactionAsync(cancellationToken);
+
+            return Result.Success();
         }
-
-        account.Balance += request.Amount;
-
-        var transaction = new Nexora.Domain.Models.Transaction
+        catch (Exception)
         {
-            ReceiverAccountId = account.Id,
-            SenderAccountId = account.Id, // Self-deposit
-            Amount = request.Amount,
-            Currency = request.Currency,
-            CreatedAt = DateTime.UtcNow
-        };
-        await _accountRepository.AddTransactionAsync(transaction, cancellationToken);
-
-        await _accountRepository.SaveChangesAsync(cancellationToken);
-
-        return Result.Success();
+            await _accountRepository.RollbackTransactionAsync(cancellationToken);
+            throw;
+        }
     }
 }
 

@@ -21,50 +21,66 @@ public class TransferCommandHandler : IRequestHandler<TransferCommand, Result>
             return Result.Failure("Transfer amount must be greater than 0");
         }
 
-        var sourceAccount = await _accountRepository.GetAccountByUserIdAndCurrencyAsync(request.FromUserId, request.Currency, cancellationToken);
-        if (sourceAccount == null)
+        try
         {
-            return Result.Failure("Source account not found");
+            await _accountRepository.BeginTransactionAsync(cancellationToken);
+
+            var sourceAccount = await _accountRepository.GetAccountByUserIdAndCurrencyAsync(request.FromUserId, request.Currency, cancellationToken);
+            if (sourceAccount == null)
+            {
+                await _accountRepository.RollbackTransactionAsync(cancellationToken);
+                return Result.Failure("Source account not found");
+            }
+
+            if (sourceAccount.Balance < request.Amount)
+            {
+                await _accountRepository.RollbackTransactionAsync(cancellationToken);
+                return Result.Failure("Insufficient funds");
+            }
+
+            var receiverUser = await _userRepository.GetUserByLoginAsync(request.ReceiverLogin, cancellationToken);
+            if (receiverUser == null)
+            {
+                await _accountRepository.RollbackTransactionAsync(cancellationToken);
+                return Result.Failure("Receiver not found");
+            }
+
+            var destAccount = await _accountRepository.GetAccountByUserIdAndCurrencyAsync(receiverUser.Id, request.Currency, cancellationToken);
+            if (destAccount == null)
+            {
+                await _accountRepository.RollbackTransactionAsync(cancellationToken);
+                return Result.Failure("Destination account not found");
+            }
+
+            if (sourceAccount.Id == destAccount.Id)
+            {
+                await _accountRepository.RollbackTransactionAsync(cancellationToken);
+                return Result.Failure("Cannot transfer to the same account");
+            }
+
+            sourceAccount.Balance -= request.Amount;
+            destAccount.Balance += request.Amount;
+
+            var transaction = new Nexora.Domain.Models.Transaction
+            {
+                SenderAccountId = sourceAccount.Id,
+                ReceiverAccountId = destAccount.Id,
+                Amount = request.Amount,
+                Currency = request.Currency,
+                CreatedAt = DateTime.UtcNow
+            };
+            await _accountRepository.AddTransactionAsync(transaction, cancellationToken);
+
+            await _accountRepository.SaveChangesAsync(cancellationToken);
+            await _accountRepository.CommitTransactionAsync(cancellationToken);
+
+            return Result.Success();
         }
-
-        if (sourceAccount.Balance < request.Amount)
+        catch (Exception)
         {
-            return Result.Failure("Insufficient funds");
+            await _accountRepository.RollbackTransactionAsync(cancellationToken);
+            throw;
         }
-
-        var receiverUser = await _userRepository.GetUserByLoginAsync(request.ReceiverLogin, cancellationToken);
-        if (receiverUser == null)
-        {
-            return Result.Failure("Receiver not found");
-        }
-
-        var destAccount = await _accountRepository.GetAccountByUserIdAndCurrencyAsync(receiverUser.Id, request.Currency, cancellationToken);
-        if (destAccount == null)
-        {
-            return Result.Failure("Destination account not found");
-        }
-
-        if (sourceAccount.Id == destAccount.Id)
-        {
-            return Result.Failure("Cannot transfer to the same account");
-        }
-
-        sourceAccount.Balance -= request.Amount;
-        destAccount.Balance += request.Amount;
-
-        var transaction = new Nexora.Domain.Models.Transaction
-        {
-            SenderAccountId = sourceAccount.Id,
-            ReceiverAccountId = destAccount.Id,
-            Amount = request.Amount,
-            Currency = request.Currency,
-            CreatedAt = DateTime.UtcNow
-        };
-        await _accountRepository.AddTransactionAsync(transaction, cancellationToken);
-
-        await _accountRepository.SaveChangesAsync(cancellationToken);
-
-        return Result.Success();
     }
 }
 

@@ -15,14 +15,14 @@ namespace Nexora.Database.Migrations
                 keyColumn: "Id",
                 keyValue: 1,
                 column: "PasswordHash",
-                value: "password123456");
+                value: "ATn9zvX5QksEsVvWt0cjfQ==:4E+jtMuMQuEaDBKkA09KLD/Fe0A17AgV/zgJehhBJLw=");
 
             migrationBuilder.UpdateData(
                 table: "users",
                 keyColumn: "Id",
                 keyValue: 2,
                 column: "PasswordHash",
-                value: "password");
+                value: "/7BAthMALkzyCHQsoaFFXA==:7x7XdZMvXdK1JAAm0q0ZZcvkLcSTqL8EOuYjF5459KQ=");
         }
 
         /// <inheritdoc />

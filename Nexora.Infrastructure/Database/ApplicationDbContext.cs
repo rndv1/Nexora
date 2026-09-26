@@ -154,14 +154,14 @@ namespace Nexora.Infrastructure.Database
                     Id = 1,
                     Login = "admin",
                     Name = "Admin User",
-                    PasswordHash = "password123456" 
+                    PasswordHash = "ATn9zvX5QksEsVvWt0cjfQ==:4E+jtMuMQuEaDBKkA09KLD/Fe0A17AgV/zgJehhBJLw=" 
                 },
                 new User
                 {
                     Id = 2,
                     Login = "user",
                     Name = "Regular User",
-                    PasswordHash = "password"
+                    PasswordHash = "/7BAthMALkzyCHQsoaFFXA==:7x7XdZMvXdK1JAAm0q0ZZcvkLcSTqL8EOuYjF5459KQ="
                 }
             );
         }

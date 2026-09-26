@@ -9,4 +9,7 @@ public interface IAccountRepository
     Task<Account?> GetAccountByIdAsync(int accountId, CancellationToken cancellationToken);
     Task AddTransactionAsync(Transaction transaction, CancellationToken cancellationToken);
     Task SaveChangesAsync(CancellationToken cancellationToken);
+    Task BeginTransactionAsync(CancellationToken cancellationToken);
+    Task CommitTransactionAsync(CancellationToken cancellationToken);
+    Task RollbackTransactionAsync(CancellationToken cancellationToken);
 }

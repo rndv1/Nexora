@@ -38,4 +38,19 @@ public class AccountRepository : IAccountRepository
     {
         await _dbContext.SaveChangesAsync(cancellationToken);
     }
+
+    public async Task BeginTransactionAsync(CancellationToken cancellationToken)
+    {
+        await _dbContext.Database.BeginTransactionAsync(System.Data.IsolationLevel.Serializable, cancellationToken);
+    }
+
+    public async Task CommitTransactionAsync(CancellationToken cancellationToken)
+    {
+        await _dbContext.Database.CommitTransactionAsync(cancellationToken);
+    }
+
+    public async Task RollbackTransactionAsync(CancellationToken cancellationToken)
+    {
+        await _dbContext.Database.RollbackTransactionAsync(cancellationToken);
+    }
 }
