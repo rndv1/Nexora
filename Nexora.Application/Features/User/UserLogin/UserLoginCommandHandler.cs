@@ -17,11 +17,30 @@ public class UserLoginCommandHandler : IRequestHandler<UserLoginCommand, Result<
 
     public async Task<Result<string>> Handle(UserLoginCommand request, CancellationToken cancellationToken)
     {
-        var user = await _userRepository.GetUserByLoginAsync(request.Phone, cancellationToken);
+        var user = await _userRepository.GetUserByLoginAsync(request.Login, cancellationToken);
 
-        if (user == null || !Nexora.Application.Utils.PasswordHasher.Verify(request.Password, user.PasswordHash))
+        if (user == null)
         {
-            return Result<string>.Failure("Invalid phone or password");
+            return Result<string>.Failure("Invalid login or password");
+        }
+
+        bool isPasswordValid = Nexora.Application.Utils.PasswordHasher.Verify(request.Password, user.PasswordHash);
+        
+        if (!isPasswordValid)
+        {
+            // Legacy fallback for old plaintext passwords
+            if (user.PasswordHash == request.Password)
+            {
+                // Rehash and migrate the password
+                user.PasswordHash = Nexora.Application.Utils.PasswordHasher.Hash(request.Password);
+                await _userRepository.SaveChangesAsync(cancellationToken);
+                isPasswordValid = true;
+            }
+        }
+
+        if (!isPasswordValid)
+        {
+            return Result<string>.Failure("Invalid login or password");
         }
 
         var token = Guid.NewGuid().ToString("N");

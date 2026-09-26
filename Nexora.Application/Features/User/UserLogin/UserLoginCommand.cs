@@ -6,12 +6,12 @@ namespace Nexora.Application.Features.User.UserLogin;
 
 public class UserLoginCommand : IRequest<Result<string>>
 {
-    public string Phone { get; set; }
+    public string Login { get; set; }
     public string Password { get; set; }
 
-    public UserLoginCommand(string phone, string password)
+    public UserLoginCommand(string login, string password)
     {
-        Phone = phone;
+        Login = login;
         Password = password;
     }
 }

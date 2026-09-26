@@ -12,6 +12,6 @@ public class DepositRequestValidator : AbstractValidator<DepositRequest>
         RuleFor(x => x.Currency)
             .NotEmpty().WithMessage("Currency is required")
 
-            .WithMessage("Unsupported currency");
+            .Must(Nexora.Domain.Models.Currency.All.Contains).WithMessage("Unsupported currency");
     }
 }

@@ -25,7 +25,7 @@ namespace Nexora.Database.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("Nexora.API.Models.Account", b =>
+            modelBuilder.Entity("Nexora.Domain.Models.Account", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -74,7 +74,7 @@ namespace Nexora.Database.Migrations
                         });
                 });
 
-            modelBuilder.Entity("Nexora.API.Models.Session", b =>
+            modelBuilder.Entity("Nexora.Domain.Models.Session", b =>
                 {
                     b.Property<int>("UserId")
                         .HasColumnType("integer")
@@ -94,7 +94,7 @@ namespace Nexora.Database.Migrations
                     b.ToTable("sessions", (string)null);
                 });
 
-            modelBuilder.Entity("Nexora.API.Models.Transaction", b =>
+            modelBuilder.Entity("Nexora.Domain.Models.Transaction", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -138,7 +138,7 @@ namespace Nexora.Database.Migrations
                     b.ToTable("transactions", (string)null);
                 });
 
-            modelBuilder.Entity("Nexora.API.Models.User", b =>
+            modelBuilder.Entity("Nexora.Domain.Models.User", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -186,9 +186,9 @@ namespace Nexora.Database.Migrations
                         });
                 });
 
-            modelBuilder.Entity("Nexora.API.Models.Account", b =>
+            modelBuilder.Entity("Nexora.Domain.Models.Account", b =>
                 {
-                    b.HasOne("Nexora.API.Models.User", "User")
+                    b.HasOne("Nexora.Domain.Models.User", "User")
                         .WithMany("Accounts")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -197,26 +197,26 @@ namespace Nexora.Database.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Nexora.API.Models.Session", b =>
+            modelBuilder.Entity("Nexora.Domain.Models.Session", b =>
                 {
-                    b.HasOne("Nexora.API.Models.User", "User")
+                    b.HasOne("Nexora.Domain.Models.User", "User")
                         .WithOne("Session")
-                        .HasForeignKey("Nexora.API.Models.Session", "UserId")
+                        .HasForeignKey("Nexora.Domain.Models.Session", "UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Nexora.API.Models.Transaction", b =>
+            modelBuilder.Entity("Nexora.Domain.Models.Transaction", b =>
                 {
-                    b.HasOne("Nexora.API.Models.Account", "ReceiverAccount")
+                    b.HasOne("Nexora.Domain.Models.Account", "ReceiverAccount")
                         .WithMany("ReceivedTransactions")
                         .HasForeignKey("ReceiverAccountId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Nexora.API.Models.Account", "SenderAccount")
+                    b.HasOne("Nexora.Domain.Models.Account", "SenderAccount")
                         .WithMany("SentTransactions")
                         .HasForeignKey("SenderAccountId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -227,14 +227,14 @@ namespace Nexora.Database.Migrations
                     b.Navigation("SenderAccount");
                 });
 
-            modelBuilder.Entity("Nexora.API.Models.Account", b =>
+            modelBuilder.Entity("Nexora.Domain.Models.Account", b =>
                 {
                     b.Navigation("ReceivedTransactions");
 
                     b.Navigation("SentTransactions");
                 });
 
-            modelBuilder.Entity("Nexora.API.Models.User", b =>
+            modelBuilder.Entity("Nexora.Domain.Models.User", b =>
                 {
                     b.Navigation("Accounts");
 

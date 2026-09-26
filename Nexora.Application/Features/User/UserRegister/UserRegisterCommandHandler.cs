@@ -25,7 +25,8 @@ public class UserRegisterCommandHandler : IRequestHandler<UserRegisterCommand, R
         {
             Login = request.Login,
             Name = request.Name,
-            PasswordHash = Nexora.Application.Utils.PasswordHasher.Hash(request.Password)
+            PasswordHash = Nexora.Application.Utils.PasswordHasher.Hash(request.Password),
+            Accounts = Currency.All.Select(c => new Account { Balance = 0, Currency = c }).ToList()
         };
 
         await _userRepository.AddUserAsync(newUser, cancellationToken);
