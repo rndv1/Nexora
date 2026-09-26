@@ -36,6 +36,15 @@ public class AccountRepository : IAccountRepository
             .ExecuteUpdateAsync(s => s.SetProperty(a => a.Balance, a => a.Balance + amount), cancellationToken);
     }
 
+    public async Task<bool> TryDecrementBalanceAsync(int accountId, decimal amount, CancellationToken cancellationToken)
+    {
+        int rows = await _dbContext.Accounts
+            .Where(a => a.Id == accountId && a.Balance >= amount)
+            .ExecuteUpdateAsync(s => s.SetProperty(a => a.Balance, a => a.Balance - amount), cancellationToken);
+        
+        return rows > 0;
+    }
+
     public async Task AddTransactionAsync(Transaction transaction, CancellationToken cancellationToken)
     {
         await _dbContext.Transactions.AddAsync(transaction, cancellationToken);

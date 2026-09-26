@@ -32,12 +32,6 @@ public class TransferCommandHandler : IRequestHandler<TransferCommand, Result>
                 return Result.Failure("Source account not found");
             }
 
-            if (sourceAccount.Balance < request.Amount)
-            {
-                await _accountRepository.RollbackTransactionAsync(cancellationToken);
-                return Result.Failure("Insufficient funds");
-            }
-
             var receiverUser = await _userRepository.GetUserByLoginAsync(request.ReceiverLogin, cancellationToken);
             if (receiverUser == null)
             {
@@ -58,7 +52,13 @@ public class TransferCommandHandler : IRequestHandler<TransferCommand, Result>
                 return Result.Failure("Cannot transfer to the same account");
             }
 
-            await _accountRepository.IncrementBalanceAsync(sourceAccount.Id, -request.Amount, cancellationToken);
+            bool decremented = await _accountRepository.TryDecrementBalanceAsync(sourceAccount.Id, request.Amount, cancellationToken);
+            if (!decremented)
+            {
+                await _accountRepository.RollbackTransactionAsync(cancellationToken);
+                return Result.Failure("Insufficient funds");
+            }
+
             await _accountRepository.IncrementBalanceAsync(destAccount.Id, request.Amount, cancellationToken);
 
             var transaction = new Nexora.Domain.Models.Transaction
