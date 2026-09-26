@@ -49,7 +49,7 @@ public class UserLoginCommandHandler : IRequestHandler<UserLoginCommand, Result<
         {
             UserId = user.Id,
             Token = token,
-            ExpiresAt = DateTime.UtcNow.AddDays(7)
+            ExpiresAt = DateTime.UtcNow.AddHours(1)
         };
 
         await _sessionRepository.UpsertAsync(session, cancellationToken);

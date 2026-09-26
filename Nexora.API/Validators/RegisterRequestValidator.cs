@@ -14,7 +14,7 @@ public class RegisterRequestValidator : AbstractValidator<RegisterRequest>
         RuleFor(x => x.Name)
             .NotEmpty().WithMessage("Name cannot be empty");
 
-        RuleFor(x => x.PasswordHash)
+        RuleFor(x => x.Password)
             .NotEmpty().WithMessage("Password cannot be empty")
             .MinimumLength(6).WithMessage("Password must be at least 6 characters long");
     }

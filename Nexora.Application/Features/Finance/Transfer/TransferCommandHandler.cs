@@ -58,8 +58,8 @@ public class TransferCommandHandler : IRequestHandler<TransferCommand, Result>
                 return Result.Failure("Cannot transfer to the same account");
             }
 
-            sourceAccount.Balance -= request.Amount;
-            destAccount.Balance += request.Amount;
+            await _accountRepository.IncrementBalanceAsync(sourceAccount.Id, -request.Amount, cancellationToken);
+            await _accountRepository.IncrementBalanceAsync(destAccount.Id, request.Amount, cancellationToken);
 
             var transaction = new Nexora.Domain.Models.Transaction
             {

@@ -28,7 +28,7 @@ namespace Nexora.API.Controllers
                 return BadRequest(validationResult.ToDictionary());
             }
 
-            var command = new UserRegisterCommand(request.Login!, request.Name!, request.PasswordHash!);
+            var command = new UserRegisterCommand(request.Login!, request.Name!, request.Password!);
             var result = await _mediator.Send(command);
             if (result)
             {
@@ -46,7 +46,7 @@ namespace Nexora.API.Controllers
                 return BadRequest(validationResult.ToDictionary());
             }
 
-            var command = new UserLoginCommand(request.Login!, request.PasswordHash!);
+            var command = new UserLoginCommand(request.Login!, request.Password!);
             var result = await _mediator.Send(command);
 
             if (result)

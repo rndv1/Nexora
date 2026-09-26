@@ -4,6 +4,6 @@ namespace Nexora.API.DTOs.User
     {
         public string? Login { get; set; }
         public string? Name { get; set; }
-        public string? PasswordHash { get; set; }
+        public string? Password { get; set; }
     }
 }

@@ -29,6 +29,13 @@ public class AccountRepository : IAccountRepository
         return await _dbContext.Accounts.FirstOrDefaultAsync(a => a.Id == accountId, cancellationToken);
     }
 
+    public async Task IncrementBalanceAsync(int accountId, decimal amount, CancellationToken cancellationToken)
+    {
+        await _dbContext.Accounts
+            .Where(a => a.Id == accountId)
+            .ExecuteUpdateAsync(s => s.SetProperty(a => a.Balance, a => a.Balance + amount), cancellationToken);
+    }
+
     public async Task AddTransactionAsync(Transaction transaction, CancellationToken cancellationToken)
     {
         await _dbContext.Transactions.AddAsync(transaction, cancellationToken);

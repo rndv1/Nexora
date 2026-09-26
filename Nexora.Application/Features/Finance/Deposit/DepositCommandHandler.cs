@@ -30,7 +30,7 @@ public class DepositCommandHandler : IRequestHandler<DepositCommand, Result>
                 return Result.Failure("Account not found");
             }
 
-            account.Balance += request.Amount;
+            await _accountRepository.IncrementBalanceAsync(account.Id, request.Amount, cancellationToken);
 
             var transaction = new Nexora.Domain.Models.Transaction
             {
