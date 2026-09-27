@@ -1,132 +1,132 @@
 # Nexora
 
-Nexora is a modern microservices-based financial API built with **ASP.NET Core 10**, **Entity Framework Core**, **PostgreSQL**, and **RabbitMQ**. It is designed using **Clean Architecture** principles and includes a distributed messaging system for processing financial events asynchronously.
+Nexora — это современный финансовый API на базе микросервисной архитектуры, созданный с использованием **ASP.NET Core 10**, **Entity Framework Core**, **PostgreSQL** и **RabbitMQ**. Проект спроектирован по принципам **Чистой Архитектуры (Clean Architecture)** и включает распределённую систему обмена сообщениями для асинхронной обработки финансовых событий.
 
-## System Architecture
+## Архитектура системы
 
-The project consists of two main microservices that communicate via RabbitMQ:
+Проект состоит из двух основных микросервисов, которые общаются через RabbitMQ:
 
-1. **Nexora.API**: The main REST API handling user registration, authentication, deposits, transfers, and transaction history.
-2. **Nexora.TaxInspection**: A background worker service that listens to transaction events and calculates hypothetical taxes on transfers.
+1. **Nexora.API**: Основной REST API, обрабатывающий регистрацию пользователей, аутентификацию, пополнение баланса, переводы и историю транзакций.
+2. **Nexora.TaxInspection**: Фоновый сервис (worker), который слушает события транзакций и рассчитывает налог на переводы.
 
 ```mermaid
 flowchart TD
-    User([User / Postman]) --> API[Nexora.API (REST)]
-    API <--> DB[(PostgreSQL)]
+    User(["Пользователь / Postman"]) --> API["Nexora.API (REST)"]
+    API <--> DB[("PostgreSQL")]
     
-    API -- "Publishes TransactionCreatedEvent" --> RMQ{RabbitMQ}
-    RMQ -- "Consumes TransactionCreatedEvent" --> TAX[Nexora.TaxInspection]
+    API -- "Публикует TransactionCreatedEvent" --> RMQ{"RabbitMQ"}
+    RMQ -- "Слушает TransactionCreatedEvent" --> TAX["Nexora.TaxInspection"]
     
-    TAX --> Log[Console / Logger]
+    TAX --> Log["Консоль / Логи"]
 ```
 
-### Clean Architecture Layers
+### Слои Чистой Архитектуры (Clean Architecture)
 
-The solution is divided into the following layers to ensure separation of concerns:
+Решение разделено на следующие слои для обеспечения правильного разделения ответственности:
 
-- **Nexora.Domain**: Enterprise entities (`User`, `Account`, `Transaction`, `Session`) and Domain Events.
-- **Nexora.Application**: Business logic, CQRS Handlers (MediatR), Validators (FluentValidation), and Interfaces.
-- **Nexora.Infrastructure**: Data access (EF Core Repositories), Messaging implementations (RabbitMQ Producer), and Database Queries.
-- **Nexora.API**: Controllers, Middlewares, and HTTP pipeline.
+- **Nexora.Domain**: Основные сущности (`User`, `Account`, `Transaction`, `Session`) и доменные события (Domain Events).
+- **Nexora.Application**: Бизнес-логика, обработчики CQRS (MediatR), валидация (FluentValidation) и интерфейсы.
+- **Nexora.Infrastructure**: Доступ к данным (репозитории EF Core), реализация обмена сообщениями (RabbitMQ Producer) и запросы к БД.
+- **Nexora.API**: Контроллеры, Middlewares и HTTP-пайплайн.
 
-## Technologies Used
+## Используемые технологии
 
 - **.NET 10** (C#)
 - **ASP.NET Core Web API**
 - **Entity Framework Core 10** (Npgsql)
 - **PostgreSQL 16**
 - **RabbitMQ 3**
-- **MediatR** (CQRS pattern)
+- **MediatR** (паттерн CQRS)
 - **FluentValidation**
 - **AutoMapper**
 - **Docker & Docker Compose**
 
 ---
 
-## Quick Start (Docker)
+## Быстрый старт (Docker)
 
-The easiest way to run the entire system (API, PostgreSQL, RabbitMQ, and the Tax Inspection worker) is using Docker Compose.
+Самый простой способ запустить всю систему (API, PostgreSQL, RabbitMQ и сервис Tax Inspection) — использовать Docker Compose.
 
-1. Clone the repository.
-2. Ensure Docker and Docker Compose are installed and running.
-3. Run the following command in the root directory:
+1. Склонируйте репозиторий.
+2. Убедитесь, что Docker и Docker Compose установлены и запущены.
+3. Выполните следующую команду в корневой директории:
 
 ```powershell
 docker compose up -d --build
 ```
 
-The system will start 4 containers:
-- `nexora-postgres-1` (Port: 5434)
-- `nexora-rabbitmq-1` (Ports: 5672, 15672)
-- `nexora-app-1` (API - Port: 5196)
-- `nexora-tax-inspection-1` (Background Consumer)
+Система запустит 4 контейнера:
+- `nexora-postgres-1` (Порт: 5434)
+- `nexora-rabbitmq-1` (Порты: 5672, 15672)
+- `nexora-app-1` (API - Порт: 5196)
+- `nexora-tax-inspection-1` (Фоновый консьюмер)
 
-> **Note:** The API and Tax Inspection services are configured to wait for PostgreSQL and RabbitMQ to be `healthy` before starting. 
+> **Примечание:** Сервисы API и Tax Inspection настроены на ожидание статуса `healthy` от PostgreSQL и RabbitMQ перед запуском. 
 
-### Endpoints and Access
+### Эндпоинты и доступы
 
 - **Swagger UI**: [http://localhost:5196/swagger](http://localhost:5196/swagger)
-- **RabbitMQ Management UI**: [http://localhost:15672](http://localhost:15672) *(guest / guest)*
+- **RabbitMQ Management UI**: [http://localhost:15672](http://localhost:15672) *(логин: guest / пароль: guest)*
 
 ---
 
-## API Endpoints
+## API Эндпоинты
 
-### User Management
-| Method | Endpoint | Auth | Body | Description |
+### Управление пользователями
+| Метод | Эндпоинт | Auth | Тело запроса | Описание |
 |---|---|---|---|---|
-| `POST` | `/api/user/register` | No | `{ "login", "name", "password" }` | Register a new user |
-| `POST` | `/api/user/login` | No | `{ "login", "password" }` | Login and get JWT token |
+| `POST` | `/api/user/register` | Нет | `{ "login", "name", "password" }` | Регистрация нового пользователя |
+| `POST` | `/api/user/login` | Нет | `{ "login", "password" }` | Авторизация и получение JWT-токена |
 
-### Finance Operations
-| Method | Endpoint | Auth | Body / Query | Description |
+### Финансовые операции
+| Метод | Эндпоинт | Auth | Тело / Query | Описание |
 |---|---|---|---|---|
-| `GET` | `/api/finance/balance` | Yes | - | Get current balance |
-| `POST` | `/api/finance/deposit` | Yes | `{ "amount", "currency" }` | Deposit funds |
-| `POST` | `/api/finance/transfer` | Yes | `{ "receiverLogin", "amount", "currency" }` | Transfer funds to another user |
-| `GET` | `/api/finance/history` | Yes | `?offset=0&limit=20` | Get transaction history |
+| `GET` | `/api/finance/balance` | Да | - | Получить текущий баланс |
+| `POST` | `/api/finance/deposit` | Да | `{ "amount", "currency" }` | Пополнить баланс |
+| `POST` | `/api/finance/transfer` | Да | `{ "receiverLogin", "amount", "currency" }` | Перевести средства другому пользователю |
+| `GET` | `/api/finance/history` | Да | `?offset=0&limit=20` | Получить историю транзакций |
 
-*(Authentication is done via `Authorization: Bearer <token>` header)*
+*(Аутентификация осуществляется через заголовок `Authorization: Bearer <token>`)*
 
 ---
 
-## Example Usage Workflow
+## Пример использования (Workflow)
 
-1. **Register two users:**
+1. **Регистрация двух пользователей:**
 ```bash
 curl -X POST "http://localhost:5196/api/User/register" -H "Content-Type: application/json" -d "{\"login\":\"user1\", \"name\":\"User One\", \"password\":\"pass123\"}"
 curl -X POST "http://localhost:5196/api/User/register" -H "Content-Type: application/json" -d "{\"login\":\"user2\", \"name\":\"User Two\", \"password\":\"pass123\"}"
 ```
 
-2. **Login as user1:**
+2. **Авторизация (user1):**
 ```bash
 curl -X POST "http://localhost:5196/api/User/login" -H "Content-Type: application/json" -d "{\"login\":\"user1\", \"password\":\"pass123\"}"
-# Copy the returned token
+# Скопируйте полученный токен
 ```
 
-3. **Deposit money to user1:**
+3. **Пополнение баланса (user1):**
 ```bash
-curl -X POST "http://localhost:5196/api/Finance/deposit" -H "Authorization: Bearer YOUR_TOKEN" -H "Content-Type: application/json" -d "{\"amount\":1000, \"currency\":\"RUB\"}"
+curl -X POST "http://localhost:5196/api/Finance/deposit" -H "Authorization: Bearer ВАШ_ТОКЕН" -H "Content-Type: application/json" -d "{\"amount\":1000, \"currency\":\"RUB\"}"
 ```
 
-4. **Transfer to user2:**
+4. **Перевод пользователю user2:**
 ```bash
-curl -X POST "http://localhost:5196/api/Finance/transfer" -H "Authorization: Bearer YOUR_TOKEN" -H "Content-Type: application/json" -d "{\"receiverLogin\":\"user2\", \"amount\":150, \"currency\":\"RUB\"}"
+curl -X POST "http://localhost:5196/api/Finance/transfer" -H "Authorization: Bearer ВАШ_ТОКЕН" -H "Content-Type: application/json" -d "{\"receiverLogin\":\"user2\", \"amount\":150, \"currency\":\"RUB\"}"
 ```
 
-5. **Check Tax Inspection Logs:**
+5. **Проверка логов Tax Inspection:**
 ```bash
 docker compose logs tax-inspection
 ```
-*You will see that the microservice intercepted the transfer event via RabbitMQ and processed the hypothetical tax!*
+*Вы увидите, что микросервис перехватил событие перевода через RabbitMQ и рассчитал налог!*
 
 ---
 
-## Development & Security Features Included
+## Реализованные практики и безопасность
 
-- **Password Hashing:** PBKDF2 with random salts and 100,000 iterations.
-- **Timing Attack Prevention:** Uses `CryptographicOperations.FixedTimeEquals` for hash comparison.
-- **Concurrency Protection:** Uses EF Core's `ExecuteUpdateAsync` for atomic balance modifications.
-- **Connection Pooling:** Singleton `IConnection` for RabbitMQ to prevent port exhaustion.
-- **Fault Tolerance:** 2-second reconnect retry policy on RabbitMQ consumers.
-- **N+1 Query Prevention:** Transaction history uses proper EF Core navigation property joins instead of correlated subqueries.
+- **Хэширование паролей:** Использование PBKDF2 со случайной солью (salt) и 100 000 итераций.
+- **Защита от Timing-атак:** Использование `CryptographicOperations.FixedTimeEquals` для сравнения хэшей.
+- **Защита от состояния гонки (Race conditions):** Атомарные изменения баланса через `ExecuteUpdateAsync` в EF Core.
+- **Пул соединений:** Использование Singleton `IConnection` для RabbitMQ, предотвращающее утечку TCP-портов.
+- **Отказоустойчивость:** Политика переподключения (reconnect) с задержкой 2 секунды для RabbitMQ-консьюмера.
+- **Решение проблемы N+1 запросов:** История транзакций использует правильные SQL JOIN-соединения вместо коррелированных подзапросов.
