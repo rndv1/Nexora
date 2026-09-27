@@ -4,7 +4,7 @@ using Nexora.Domain.Models;
 
 namespace Nexora.Application.Features.User.UserRegister;
 
-public class UserRegisterCommandHandler : IRequestHandler<UserRegisterCommand, Result<bool>>
+public class UserRegisterCommandHandler : IRequestHandler<UserRegisterCommand, Result>
 {
     private readonly IUserRepository _userRepository;
 
@@ -13,12 +13,12 @@ public class UserRegisterCommandHandler : IRequestHandler<UserRegisterCommand, R
         _userRepository = userRepository;
     }
 
-    public async Task<Result<bool>> Handle(UserRegisterCommand request, CancellationToken cancellationToken)
+    public async Task<Result> Handle(UserRegisterCommand request, CancellationToken cancellationToken)
     {
         var existingUser = await _userRepository.GetUserByLoginAsync(request.Login, cancellationToken);
         if (existingUser != null)
         {
-            return Result<bool>.Failure("User with this login already exists");
+            return Result.Failure("User with this login already exists");
         }
 
         var newUser = new Nexora.Domain.Models.User
@@ -32,8 +32,6 @@ public class UserRegisterCommandHandler : IRequestHandler<UserRegisterCommand, R
         await _userRepository.AddUserAsync(newUser, cancellationToken);
         await _userRepository.SaveChangesAsync(cancellationToken);
 
-        return Result<bool>.Success(true);
+        return Result.Success();
     }
 }
-
-

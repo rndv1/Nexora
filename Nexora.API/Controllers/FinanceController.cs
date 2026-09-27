@@ -15,7 +15,7 @@ namespace Nexora.API.Controllers
     [Route("api/[controller]")]
     [ApiController]
     [MyAuthorize]
-    public class FinanceController : Controller
+    public class FinanceController : ControllerBase
     {
         private readonly IMediator _mediator;
         private readonly IMapper _mapper;
@@ -113,7 +113,7 @@ namespace Nexora.API.Controllers
             return BadRequest(new { Message = historyResult.ErrorMessage });
         }
 
-        internal int GetUserId()
+        private int GetUserId()
         {
             var userId = HttpContext.Items[Constants.UserIdContextParameterName] as int?;
             return userId!.Value;

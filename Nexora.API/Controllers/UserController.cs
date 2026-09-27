@@ -30,7 +30,7 @@ namespace Nexora.API.Controllers
 
             var command = new UserRegisterCommand(request.Login!, request.Name!, request.Password!);
             var result = await _mediator.Send(command);
-            if (result)
+            if (result.IsSuccess)
             {
                 return Ok();
             }
@@ -49,9 +49,9 @@ namespace Nexora.API.Controllers
             var command = new UserLoginCommand(request.Login!, request.Password!);
             var result = await _mediator.Send(command);
 
-            if (result)
+            if (result.IsSuccess)
             {
-                return Ok(new { Token = result.Value });
+                return Ok(new LoginResponse { Token = result.Value! });
             }
             return Unauthorized(new { Message = result.ErrorMessage });
         }

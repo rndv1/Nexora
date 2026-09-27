@@ -33,21 +33,21 @@ public class TransactionHistoryReader : ITransactionHistoryReader
             return Result<List<TransactionHistoryDto>>.Failure("Account not found");
         }
 
-        var query = _dbContext.Transactions.AsQueryable();
-
-        query = query.Where(x => accountIds.Contains(x.SenderAccountId) || accountIds.Contains(x.ReceiverAccountId));
+        var query = _dbContext.Transactions
+            .Where(t => accountIds.Contains(t.SenderAccountId) || accountIds.Contains(t.ReceiverAccountId));
 
         if (dateFrom.HasValue)
         {
-            query = query.Where(x => x.CreatedAt >= dateFrom.Value);
-        }
-        if (dateTo.HasValue)
-        {
-            query = query.Where(x => x.CreatedAt <= dateTo.Value);
+            query = query.Where(t => t.CreatedAt >= dateFrom.Value);
         }
 
-        var projectedQuery = query
-            .OrderBy(x => x.CreatedAt)
+        if (dateTo.HasValue)
+        {
+            query = query.Where(t => t.CreatedAt <= dateTo.Value);
+        }
+
+        var result = await query
+            .OrderBy(t => t.CreatedAt)
             .Skip(skip)
             .Take(take)
             .Select(t => new TransactionHistoryDto
@@ -55,17 +55,10 @@ public class TransactionHistoryReader : ITransactionHistoryReader
                 Amount = t.Amount,
                 Date = t.CreatedAt,
                 Currency = t.Currency,
-                SenderName = _dbContext.Accounts
-                    .Where(a => a.Id == t.SenderAccountId)
-                    .Select(a => a.User!.Name)
-                    .FirstOrDefault() ?? "Unknown",
-                ReceiverName = _dbContext.Accounts
-                    .Where(a => a.Id == t.ReceiverAccountId)
-                    .Select(a => a.User!.Name)
-                    .FirstOrDefault() ?? "Unknown"
-            });
-
-        var result = await projectedQuery.ToListAsync(cancellationToken);
+                SenderName = t.SenderAccount!.User!.Name,
+                ReceiverName = t.ReceiverAccount!.User!.Name
+            })
+            .ToListAsync(cancellationToken);
 
         return result;
     }

@@ -35,7 +35,7 @@ public class DepositCommandHandler : IRequestHandler<DepositCommand, Result>
             var transaction = new Nexora.Domain.Models.Transaction
             {
                 ReceiverAccountId = account.Id,
-                SenderAccountId = account.Id, // Self-deposit
+                SenderAccountId = account.Id,
                 Amount = request.Amount,
                 Currency = request.Currency,
                 CreatedAt = DateTime.UtcNow

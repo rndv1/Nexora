@@ -4,7 +4,7 @@ using Nexora.Domain.Models;
 
 namespace Nexora.Application.Features.User.UserRegister;
 
-public class UserRegisterCommand : IRequest<Result<bool>>
+public class UserRegisterCommand : IRequest<Result>
 {
     public string Login { get; set; }
     public string Name { get; set; }
