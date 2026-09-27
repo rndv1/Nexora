@@ -1,476 +1,132 @@
 # Nexora
 
-[Русский](README.md) | [English](README.en.md)
+Nexora is a modern microservices-based financial API built with **ASP.NET Core 10**, **Entity Framework Core**, **PostgreSQL**, and **RabbitMQ**. It is designed using **Clean Architecture** principles and includes a distributed messaging system for processing financial events asynchronously.
 
-Nexora - REST API для управления пользователями, банковскими счетами
-и денежными операциями.
+## System Architecture
 
-Проект реализован на ASP.NET Core с использованием Entity Framework Core
-и PostgreSQL.
+The project consists of two main microservices that communicate via RabbitMQ:
 
-## Возможности
-
-- регистрация и вход пользователей;
-- авторизация через Bearer-токен;
-- получение текущего баланса;
-- пополнение счета;
-- перевод средств другому пользователю;
-- просмотр истории операций с фильтрацией и пагинацией;
-- автоматическое удаление истекших сессий каждые 10 минут;
-- Swagger UI для просмотра и тестирования API.
-
-## Архитектура
-
-Приложение разделено на несколько слоев:
+1. **Nexora.API**: The main REST API handling user registration, authentication, deposits, transfers, and transaction history.
+2. **Nexora.TaxInspection**: A background worker service that listens to transaction events and calculates hypothetical taxes on transfers.
 
 ```mermaid
-flowchart LR
-    Client["HTTP-клиент"] --> Middleware["AuthorizationMiddleware"]
-    Middleware --> Controller["Controllers"]
-    Controller --> Service["Services"]
-    Service --> DbContext["ApplicationDbContext"]
-    DbContext --> PostgreSQL[(PostgreSQL)]
-    Cleanup["SessionCleanupService"] --> DbContext
+flowchart TD
+    User([User / Postman]) --> API[Nexora.API (REST)]
+    API <--> DB[(PostgreSQL)]
+    
+    API -- "Publishes TransactionCreatedEvent" --> RMQ{RabbitMQ}
+    RMQ -- "Consumes TransactionCreatedEvent" --> TAX[Nexora.TaxInspection]
+    
+    TAX --> Log[Console / Logger]
 ```
 
-| Компонент | Ответственность |
-|---|---|
-| `Controllers` | Принимают HTTP-запросы, выполняют model binding и формируют HTTP-ответы |
-| `DTOs` | Определяют контракты входных и выходных данных API |
-| `Services` | Содержат бизнес-логику пользователей, счетов и финансовых операций |
-| `Models` | Представляют сущности базы данных |
-| `ApplicationDbContext` | Настраивает таблицы, связи, ограничения и seed-данные |
-| `AuthorizationMiddleware` | Проверяет Bearer-токен и срок действия сессии |
-| `SessionCleanupService` | Периодически удаляет истекшие сессии |
+### Clean Architecture Layers
 
-### Поток авторизованного запроса
+The solution is divided into the following layers to ensure separation of concerns:
 
-1. Клиент отправляет `Authorization: Bearer <token>`.
-2. Routing определяет endpoint.
-3. `AuthorizationMiddleware` проверяет наличие атрибута `[MyAuthorize]`.
-4. Middleware находит сессию в PostgreSQL и проверяет `ExpiresAt`.
-5. Идентификатор пользователя сохраняется в `HttpContext.Items`.
-6. Контроллер передает `UserId` в сервис.
-7. Сервис выполняет бизнес-операцию через `ApplicationDbContext`.
+- **Nexora.Domain**: Enterprise entities (`User`, `Account`, `Transaction`, `Session`) and Domain Events.
+- **Nexora.Application**: Business logic, CQRS Handlers (MediatR), Validators (FluentValidation), and Interfaces.
+- **Nexora.Infrastructure**: Data access (EF Core Repositories), Messaging implementations (RabbitMQ Producer), and Database Queries.
+- **Nexora.API**: Controllers, Middlewares, and HTTP pipeline.
 
-Методы регистрации и входа доступны без токена. Все методы
-`FinanceController` защищены атрибутом `[MyAuthorize]`.
+## Technologies Used
 
-## Требования
+- **.NET 10** (C#)
+- **ASP.NET Core Web API**
+- **Entity Framework Core 10** (Npgsql)
+- **PostgreSQL 16**
+- **RabbitMQ 3**
+- **MediatR** (CQRS pattern)
+- **FluentValidation**
+- **AutoMapper**
+- **Docker & Docker Compose**
 
-- .NET SDK 10;
-- PostgreSQL;
-- установленный инструмент `dotnet-ef`.
+---
 
-Проверить наличие инструментов:
+## Quick Start (Docker)
+
+The easiest way to run the entire system (API, PostgreSQL, RabbitMQ, and the Tax Inspection worker) is using Docker Compose.
+
+1. Clone the repository.
+2. Ensure Docker and Docker Compose are installed and running.
+3. Run the following command in the root directory:
 
 ```powershell
-dotnet --version
-dotnet ef --version
+docker compose up -d --build
 ```
 
-Если `dotnet-ef` не установлен:
+The system will start 4 containers:
+- `nexora-postgres-1` (Port: 5434)
+- `nexora-rabbitmq-1` (Ports: 5672, 15672)
+- `nexora-app-1` (API - Port: 5196)
+- `nexora-tax-inspection-1` (Background Consumer)
 
-```powershell
-dotnet tool install --global dotnet-ef
-```
+> **Note:** The API and Tax Inspection services are configured to wait for PostgreSQL and RabbitMQ to be `healthy` before starting. 
 
-## Настройка базы данных
+### Endpoints and Access
 
-Приложение использует строку подключения `DefaultConnection`.
+- **Swagger UI**: [http://localhost:5196/swagger](http://localhost:5196/swagger)
+- **RabbitMQ Management UI**: [http://localhost:15672](http://localhost:15672) *(guest / guest)*
 
-Для локальной разработки рекомендуется создать файл
-`Nexora.API/appsettings.Development.json`:
+---
 
-```json
-{
-  "ConnectionStrings": {
-    "DefaultConnection": "Server=localhost;Port=5433;Database=Nexora;User Id=Nexora;Password=YOUR_PASSWORD;"
-  }
-}
-```
+## API Endpoints
 
-Файл `appsettings.Development.json` добавлен в `.gitignore`, поэтому локальные
-учетные данные не попадут в репозиторий.
-
-Применить все миграции:
-
-```powershell
-dotnet ef database update -p Nexora.Infrastructure -s Nexora.API
-```
-
-Миграции создают таблицы и добавляют тестовые данные:
-
-| Login | Password | Balance |
-|---|---|---:|
-| `admin` | `password123456` | 1000 |
-| `user` | `password` | 2000 |
-
-### Работа с миграциями
-
-Создать новую миграцию:
-
-```powershell
-dotnet ef migrations add MigrationName `
-  -p Nexora.Infrastructure -s Nexora.API `
-  --output-dir Database/Migrations
-```
-
-Применить миграции:
-
-```powershell
-dotnet ef database update -p Nexora.Infrastructure -s Nexora.API
-```
-
-Посмотреть список и состояние миграций:
-
-```powershell
-dotnet ef migrations list -p Nexora.Infrastructure -s Nexora.API
-```
-
-Удалить последнюю миграцию, если она еще не применена:
-
-```powershell
-dotnet ef migrations remove -p Nexora.Infrastructure -s Nexora.API
-```
-
-Откатить базу до выбранной миграции:
-
-```powershell
-dotnet ef database update PreviousMigration -p Nexora.Infrastructure -s Nexora.API
-```
-
-## Запуск
-
-Восстановить зависимости и собрать проект:
-
-```powershell
-dotnet restore
-dotnet build
-```
-
-Запустить API:
-
-```powershell
-dotnet run --project Nexora.API
-```
-
-Стандартные адреса при локальном запуске:
-
-- HTTPS: `https://localhost:7130`
-- HTTP: `http://localhost:5196`
-- Swagger UI: `https://localhost:7130/swagger`
-
-Если порт уже занят, остановите предыдущий экземпляр приложения или укажите
-другой порт:
-
-```powershell
-dotnet run --project Nexora.API --urls "http://localhost:5197"
-```
-
-## Авторизация
-
-После успешного входа API возвращает токен:
-
-```json
-{
-  "token": "YOUR_TOKEN"
-}
-```
-
-Защищенные запросы должны содержать заголовок:
-
-```http
-Authorization: Bearer YOUR_TOKEN
-```
-
-В Swagger UI нажмите **Authorize** и вставьте только значение токена.
-Swagger самостоятельно добавит префикс `Bearer`.
-
-Сессия действует один час. Истекшие сессии автоматически удаляются фоновым
-сервисом каждые 10 минут.
-
-## Контракты API
-
-| Метод | Endpoint | Авторизация | Входные данные | Успешный ответ |
+### User Management
+| Method | Endpoint | Auth | Body | Description |
 |---|---|---|---|---|
-| `POST` | `/api/user/register` | Нет | JSON: `login`, `name`, `passwordHash` | `200 OK` |
-| `POST` | `/api/user/login` | Нет | JSON: `login`, `passwordHash` | `200 OK` + token |
-| `GET` | `/api/finance/balance` | Bearer | Нет | `200 OK` + balance |
-| `POST` | `/api/finance/deposit` | Bearer | JSON: `amount` | `200 OK` |
-| `POST` | `/api/finance/transfer` | Bearer | JSON: `receiverLogin`, `amount` | `200 OK` |
-| `GET` | `/api/finance/history` | Bearer | Query: `from`, `to`, `offset`, `limit` | `200 OK` + список операций |
+| `POST` | `/api/user/register` | No | `{ "login", "name", "password" }` | Register a new user |
+| `POST` | `/api/user/login` | No | `{ "login", "password" }` | Login and get JWT token |
 
-### HTTP-ответы
+### Finance Operations
+| Method | Endpoint | Auth | Body / Query | Description |
+|---|---|---|---|---|
+| `GET` | `/api/finance/balance` | Yes | - | Get current balance |
+| `POST` | `/api/finance/deposit` | Yes | `{ "amount", "currency" }` | Deposit funds |
+| `POST` | `/api/finance/transfer` | Yes | `{ "receiverLogin", "amount", "currency" }` | Transfer funds to another user |
+| `GET` | `/api/finance/history` | Yes | `?offset=0&limit=20` | Get transaction history |
 
-| Статус | Назначение |
-|---|---|
-| `200 OK` | Операция выполнена успешно |
-| `400 Bad Request` | Ошибка валидации или выполнение операции невозможно |
-| `401 Unauthorized` | Неверные данные для входа либо Bearer-токен отсутствует, недействителен или просрочен |
+*(Authentication is done via `Authorization: Bearer <token>` header)*
 
-Ошибки бизнес-логики возвращаются в формате:
+---
 
-```json
-{
-  "message": "Описание ошибки"
-}
+## Example Usage Workflow
+
+1. **Register two users:**
+```bash
+curl -X POST "http://localhost:5196/api/User/register" -H "Content-Type: application/json" -d "{\"login\":\"user1\", \"name\":\"User One\", \"password\":\"pass123\"}"
+curl -X POST "http://localhost:5196/api/User/register" -H "Content-Type: application/json" -d "{\"login\":\"user2\", \"name\":\"User Two\", \"password\":\"pass123\"}"
 ```
 
-## Примеры API-запросов
-
-### Регистрация
-
-```http
-POST /api/user/register
-Content-Type: application/json
-
-{
-  "login": "new-user",
-  "name": "New User",
-  "passwordHash": "password123"
-}
+2. **Login as user1:**
+```bash
+curl -X POST "http://localhost:5196/api/User/login" -H "Content-Type: application/json" -d "{\"login\":\"user1\", \"password\":\"pass123\"}"
+# Copy the returned token
 ```
 
-Пример с `curl`:
-
-```powershell
-curl.exe -X POST "https://localhost:7130/api/user/register" `
-  -H "Content-Type: application/json" `
-  -d '{"login":"new-user","name":"New User","passwordHash":"password123"}'
+3. **Deposit money to user1:**
+```bash
+curl -X POST "http://localhost:5196/api/Finance/deposit" -H "Authorization: Bearer YOUR_TOKEN" -H "Content-Type: application/json" -d "{\"amount\":1000, \"currency\":\"RUB\"}"
 ```
 
-### Вход
-
-```http
-POST /api/user/login
-Content-Type: application/json
-
-{
-  "login": "admin",
-  "passwordHash": "password123456"
-}
+4. **Transfer to user2:**
+```bash
+curl -X POST "http://localhost:5196/api/Finance/transfer" -H "Authorization: Bearer YOUR_TOKEN" -H "Content-Type: application/json" -d "{\"receiverLogin\":\"user2\", \"amount\":150, \"currency\":\"RUB\"}"
 ```
 
-```powershell
-curl.exe -X POST "https://localhost:7130/api/user/login" `
-  -H "Content-Type: application/json" `
-  -d '{"login":"admin","passwordHash":"password123456"}'
+5. **Check Tax Inspection Logs:**
+```bash
+docker compose logs tax-inspection
 ```
+*You will see that the microservice intercepted the transfer event via RabbitMQ and processed the hypothetical tax!*
 
-### Получение баланса
+---
 
-```http
-GET /api/finance/balance
-Authorization: Bearer YOUR_TOKEN
-```
+## Development & Security Features Included
 
-```powershell
-curl.exe "https://localhost:7130/api/finance/balance" `
-  -H "Authorization: Bearer YOUR_TOKEN"
-```
-
-Пример ответа:
-
-```json
-{
-  "balance": 1000
-}
-```
-
-### Пополнение счета
-
-```http
-POST /api/finance/deposit
-Authorization: Bearer YOUR_TOKEN
-Content-Type: application/json
-
-{
-  "amount": 100
-}
-```
-
-```powershell
-curl.exe -X POST "https://localhost:7130/api/finance/deposit" `
-  -H "Authorization: Bearer YOUR_TOKEN" `
-  -H "Content-Type: application/json" `
-  -d '{"amount":100}'
-```
-
-### Перевод средств
-
-```http
-POST /api/finance/transfer
-Authorization: Bearer YOUR_TOKEN
-Content-Type: application/json
-
-{
-  "receiverLogin": "user",
-  "amount": 50
-}
-```
-
-```powershell
-curl.exe -X POST "https://localhost:7130/api/finance/transfer" `
-  -H "Authorization: Bearer YOUR_TOKEN" `
-  -H "Content-Type: application/json" `
-  -d '{"receiverLogin":"user","amount":50}'
-```
-
-### История операций
-
-```http
-GET /api/finance/history?offset=0&limit=20
-Authorization: Bearer YOUR_TOKEN
-```
-
-Доступные query-параметры:
-
-| Параметр | Описание | Значение по умолчанию |
-|---|---|---:|
-| `from` | Начальная дата в формате ISO 8601 | не задано |
-| `to` | Конечная дата в формате ISO 8601 | не задано |
-| `offset` | Количество пропускаемых записей | 0 |
-| `limit` | Размер страницы, от 1 до 100 | 20 |
-
-```powershell
-curl.exe "https://localhost:7130/api/finance/history?offset=0&limit=20" `
-  -H "Authorization: Bearer YOUR_TOKEN"
-```
-
-Пример ответа:
-
-```json
-[
-  {
-    "senderName": "Admin User",
-    "receiverName": "Regular User",
-    "amount": 50,
-    "date": "2026-06-21T12:00:00Z"
-  }
-]
-```
-
-## Структура базы данных
-
-### `users`
-
-| Поле | Тип | Описание |
-|---|---|---|
-| `id` | integer | Первичный ключ |
-| `login` | text | Уникальный логин |
-| `name` | text | Имя пользователя |
-| `password_hash` | text | Данные пароля пользователя |
-
-### `accounts`
-
-| Поле | Тип | Описание |
-|---|---|---|
-| `id` | integer | Первичный ключ |
-| `user_id` | integer | Внешний ключ на `users.id` |
-| `balance` | numeric(18,2) | Текущий баланс |
-
-### `sessions`
-
-| Поле | Тип | Описание |
-|---|---|---|
-| `user_id` | integer | Первичный и внешний ключ на `users.id` |
-| `token` | text | Токен авторизации |
-| `expires_at` | timestamp with time zone | Время окончания сессии |
-
-Для одного пользователя хранится не более одной активной сессии.
-
-### `transactions`
-
-| Поле | Тип | Описание |
-|---|---|---|
-| `id` | integer | Первичный ключ |
-| `sender_account_id` | integer | Внешний ключ на счет отправителя |
-| `receiver_account_id` | integer | Внешний ключ на счет получателя |
-| `amount` | numeric(18,2) | Сумма перевода |
-| `created_at` | timestamp with time zone | Время создания операции |
-
-## Связи
-
-```mermaid
-erDiagram
-    USERS ||--|| ACCOUNTS : owns
-    USERS ||--o| SESSIONS : has
-    ACCOUNTS ||--o{ TRANSACTIONS : sends
-    ACCOUNTS ||--o{ TRANSACTIONS : receives
-
-    USERS {
-        int id PK
-        string login UK
-        string name
-        string password_hash
-    }
-
-    ACCOUNTS {
-        int id PK
-        int user_id FK
-        decimal balance
-    }
-
-    SESSIONS {
-        int user_id PK, FK
-        string token
-        datetime expires_at
-    }
-
-    TRANSACTIONS {
-        int id PK
-        int sender_account_id FK
-        int receiver_account_id FK
-        decimal amount
-        datetime created_at
-    }
-```
-
-## Фоновые процессы
-
-`SessionCleanupService` запускается вместе с приложением через
-`AddHostedService`. Каждые 10 минут сервис:
-
-1. создает отдельный dependency injection scope;
-2. получает новый экземпляр `ApplicationDbContext`;
-3. удаляет сессии, у которых `ExpiresAt < DateTime.UtcNow`;
-4. записывает количество удаленных сессий в лог;
-5. ожидает следующего запуска с поддержкой `CancellationToken`.
-
-Для удаления используется `ExecuteDeleteAsync`, поэтому истекшие сессии
-удаляются одним SQL-запросом без загрузки сущностей в память.
-
-## Структура проекта
-
-```text
-Nexora/
-├── Attributes/          Пользовательские атрибуты
-├── Controllers/         HTTP endpoint-ы
-├── Database/            DbContext и миграции EF Core
-│   └── Migrations/
-├── DTOs/                Контракты запросов и ответов
-├── Middlewares/         Компоненты HTTP pipeline
-├── Models/              Сущности базы данных
-├── Services/            Бизнес-логика и фоновые сервисы
-├── Program.cs           DI, Swagger и HTTP pipeline
-└── appsettings.json     Основная конфигурация
-```
-
-## Конфигурация
-
-| Параметр | Назначение | Пример |
-|---|---|---|
-| `ConnectionStrings:DefaultConnection` | Подключение к PostgreSQL | `Server=localhost;Port=5433;...` |
-| `ASPNETCORE_ENVIRONMENT` | Текущее окружение приложения | `Development` |
-| `applicationUrl` | HTTP/HTTPS адреса локального запуска | `https://localhost:7130` |
-
-При окружении `Development` приложение публикует OpenAPI-документ и Swagger UI.
-
-## Основные технологии
-
-- ASP.NET Core 10
-- Entity Framework Core 10
-- PostgreSQL
-- Npgsql
-- Swashbuckle / Swagger UI
+- **Password Hashing:** PBKDF2 with random salts and 100,000 iterations.
+- **Timing Attack Prevention:** Uses `CryptographicOperations.FixedTimeEquals` for hash comparison.
+- **Concurrency Protection:** Uses EF Core's `ExecuteUpdateAsync` for atomic balance modifications.
+- **Connection Pooling:** Singleton `IConnection` for RabbitMQ to prevent port exhaustion.
+- **Fault Tolerance:** 2-second reconnect retry policy on RabbitMQ consumers.
+- **N+1 Query Prevention:** Transaction history uses proper EF Core navigation property joins instead of correlated subqueries.
