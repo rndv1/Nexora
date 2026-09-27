@@ -6,6 +6,10 @@ COPY Nexora.API/Nexora.API.csproj Nexora.API/
 COPY Nexora.Application/Nexora.Application.csproj Nexora.Application/
 COPY Nexora.Domain/Nexora.Domain.csproj Nexora.Domain/
 COPY Nexora.Infrastructure/Nexora.Infrastructure.csproj Nexora.Infrastructure/
+COPY Nexora.TaxInspection.Worker/Nexora.TaxInspection.Worker.csproj Nexora.TaxInspection.Worker/
+COPY Nexora.TaxInspection.Application/Nexora.TaxInspection.Application.csproj Nexora.TaxInspection.Application/
+COPY Nexora.TaxInspection.Domain/Nexora.TaxInspection.Domain.csproj Nexora.TaxInspection.Domain/
+COPY Nexora.TaxInspection.Infrastructure/Nexora.TaxInspection.Infrastructure.csproj Nexora.TaxInspection.Infrastructure/
 
 RUN dotnet restore Nexora.slnx
 

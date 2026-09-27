@@ -25,18 +25,6 @@ public class UserLoginCommandHandler : IRequestHandler<UserLoginCommand, Result<
         }
 
         bool isPasswordValid = Nexora.Application.Utils.PasswordHasher.Verify(request.Password, user.PasswordHash);
-        
-        if (!isPasswordValid)
-        {
-            // Legacy fallback for old plaintext passwords
-            if (user.PasswordHash == request.Password)
-            {
-                // Rehash and migrate the password
-                user.PasswordHash = Nexora.Application.Utils.PasswordHasher.Hash(request.Password);
-                await _userRepository.SaveChangesAsync(cancellationToken);
-                isPasswordValid = true;
-            }
-        }
 
         if (!isPasswordValid)
         {

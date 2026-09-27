@@ -3,4 +3,8 @@
   <Project Path="Nexora.Application/Nexora.Application.csproj" />
   <Project Path="Nexora.Domain/Nexora.Domain.csproj" />
   <Project Path="Nexora.Infrastructure/Nexora.Infrastructure.csproj" />
+  <Project Path="Nexora.TaxInspection.Worker/Nexora.TaxInspection.Worker.csproj" />
+  <Project Path="Nexora.TaxInspection.Application/Nexora.TaxInspection.Application.csproj" />
+  <Project Path="Nexora.TaxInspection.Domain/Nexora.TaxInspection.Domain.csproj" />
+  <Project Path="Nexora.TaxInspection.Infrastructure/Nexora.TaxInspection.Infrastructure.csproj" />
 </Solution>

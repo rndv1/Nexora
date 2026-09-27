@@ -73,10 +73,7 @@ public class AccountRepository : IAccountRepository
             {
                 await _dbContext.Database.RollbackTransactionAsync(CancellationToken.None);
             }
-            catch
-            {
-                // Ignore rollback exceptions to not mask the original exception
-            }
+            catch { }
         }
     }
 }

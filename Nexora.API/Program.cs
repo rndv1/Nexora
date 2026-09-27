@@ -10,6 +10,7 @@ using Nexora.Application.Behaviors;
 using Nexora.API.Validators;
 using Nexora.Application.Features.Finance.GetTransactionHistory;
 using Nexora.Infrastructure.Data.Repositories;
+using Nexora.Infrastructure.RabbitMQ;
 
 namespace Nexora.API
 {
@@ -32,6 +33,20 @@ namespace Nexora.API
                 cfg.RegisterServicesFromAssembly(typeof(GetTransactionHistoryQuery).Assembly);
                 cfg.AddOpenBehavior(typeof(ValidationBehavior<,>));
             });
+            
+            builder.Services.Configure<RabbitMqSettings>(builder.Configuration.GetSection("RabbitMq"));
+            builder.Services.AddSingleton<RabbitMQ.Client.IConnection>(sp =>
+            {
+                var settings = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<RabbitMqSettings>>().Value;
+                var factory = new RabbitMQ.Client.ConnectionFactory
+                {
+                    HostName = settings.HostName,
+                    UserName = settings.UserName,
+                    Password = settings.Password
+                };
+                return factory.CreateConnectionAsync().GetAwaiter().GetResult();
+            });
+            builder.Services.AddSingleton<IMessageProducer, RabbitMqMessageProducer>();
 
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
                options.UseNpgsql(connectionString));
@@ -64,7 +79,7 @@ namespace Nexora.API
 
             builder.Services.AddControllers();
             builder.Services.AddHostedService<SessionCleanupService>();
-
+            
             var app = builder.Build();
 
             await MigrateDatabaseAsync(app);

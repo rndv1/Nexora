@@ -1,4 +1,5 @@
 using MediatR;
+using Nexora.Application.Events;
 using Nexora.Application.Interfaces;
 
 namespace Nexora.Application.Features.Finance.Transfer;
@@ -7,11 +8,13 @@ public class TransferCommandHandler : IRequestHandler<TransferCommand, Result>
 {
     private readonly IAccountRepository _accountRepository;
     private readonly IUserRepository _userRepository;
+    private readonly IMessageProducer _messageProducer;
 
-    public TransferCommandHandler(IAccountRepository accountRepository, IUserRepository userRepository)
+    public TransferCommandHandler(IAccountRepository accountRepository, IUserRepository userRepository, IMessageProducer messageProducer)
     {
         _accountRepository = accountRepository;
         _userRepository = userRepository;
+        _messageProducer = messageProducer;
     }
 
     public async Task<Result> Handle(TransferCommand request, CancellationToken cancellationToken)
@@ -73,6 +76,14 @@ public class TransferCommandHandler : IRequestHandler<TransferCommand, Result>
 
             await _accountRepository.SaveChangesAsync(cancellationToken);
             await _accountRepository.CommitTransactionAsync(cancellationToken);
+
+            await _messageProducer.SendMessageAsync(new TransactionCreatedEvent
+            {
+                SenderId = request.FromUserId,
+                ReceiverId = receiverUser.Id,
+                Amount = transaction.Amount,
+                Currency = transaction.Currency
+            }, cancellationToken); 
 
             return Result.Success();
         }
