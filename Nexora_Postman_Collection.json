@@ -1,0 +1,141 @@
+{
+	"info": {
+		"_postman_id": "a1b2c3d4-e5f6-7a8b-9c0d-e1f2a3b4c5d6",
+		"name": "GoldenCrown / Nexora API",
+		"description": "Complete Postman collection for the Nexora (GoldenCrown) test assignment.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "1. User Registration",
+			"request": {
+				"method": "POST",
+				"header": [
+					{ "key": "Content-Type", "value": "application/json" }
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"login\": \"testuser\",\n  \"name\": \"Test User\",\n  \"password\": \"password123\"\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/api/user/register",
+					"host": [ "{{baseUrl}}" ],
+					"path": [ "api", "user", "register" ]
+				}
+			}
+		},
+		{
+			"name": "2. User Login",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var jsonData = pm.response.json();",
+							"pm.environment.set(\"token\", jsonData.token);"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{ "key": "Content-Type", "value": "application/json" }
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"login\": \"testuser\",\n  \"password\": \"password123\"\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/api/user/login",
+					"host": [ "{{baseUrl}}" ],
+					"path": [ "api", "user", "login" ]
+				}
+			}
+		},
+		{
+			"name": "3. Get Balance",
+			"request": {
+				"method": "GET",
+				"header": [
+					{ "key": "Authorization", "value": "Bearer {{token}}" }
+				],
+				"url": {
+					"raw": "{{baseUrl}}/api/finance/balance?currency=RUB",
+					"host": [ "{{baseUrl}}" ],
+					"path": [ "api", "finance", "balance" ],
+					"query": [
+						{
+							"key": "currency",
+							"value": "RUB"
+						}
+					]
+				}
+			}
+		},
+		{
+			"name": "4. Deposit Funds",
+			"request": {
+				"method": "POST",
+				"header": [
+					{ "key": "Authorization", "value": "Bearer {{token}}" },
+					{ "key": "Content-Type", "value": "application/json" }
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"amount\": 1000.00,\n  \"currency\": \"RUB\"\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/api/finance/deposit",
+					"host": [ "{{baseUrl}}" ],
+					"path": [ "api", "finance", "deposit" ]
+				}
+			}
+		},
+		{
+			"name": "5. Transfer Funds",
+			"request": {
+				"method": "POST",
+				"header": [
+					{ "key": "Authorization", "value": "Bearer {{token}}" },
+					{ "key": "Content-Type", "value": "application/json" }
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"receiverLogin\": \"anotheruser\",\n  \"amount\": 150.00,\n  \"currency\": \"RUB\"\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/api/finance/transfer",
+					"host": [ "{{baseUrl}}" ],
+					"path": [ "api", "finance", "transfer" ]
+				}
+			}
+		},
+		{
+			"name": "6. Get Transaction History",
+			"request": {
+				"method": "GET",
+				"header": [
+					{ "key": "Authorization", "value": "Bearer {{token}}" }
+				],
+				"url": {
+					"raw": "{{baseUrl}}/api/finance/history?offset=0&limit=20",
+					"host": [ "{{baseUrl}}" ],
+					"path": [ "api", "finance", "history" ],
+					"query": [
+						{ "key": "offset", "value": "0" },
+						{ "key": "limit", "value": "20" }
+					]
+				}
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:5196",
+			"type": "string"
+		}
+	]
+}

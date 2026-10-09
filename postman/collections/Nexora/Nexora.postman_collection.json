@@ -22,18 +22,18 @@
                     "method": "GET",
                     "header": [],
                     "url": {
-                      "raw": "{{baseUrl}}/api/Finance/balance?Currency=RUB",
+                      "raw": "{{baseUrl}}/api/finance/balance?currency=RUB",
                       "host": [
                         "{{baseUrl}}"
                       ],
                       "path": [
                         "api",
-                        "Finance",
+                        "finance",
                         "balance"
                       ],
                       "query": [
                         {
-                          "key": "Currency",
+                          "key": "currency",
                           "value": "RUB"
                         }
                       ]

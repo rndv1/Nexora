@@ -47,7 +47,7 @@ public class TransactionHistoryReader : ITransactionHistoryReader
         }
 
         var result = await query
-            .OrderBy(t => t.CreatedAt)
+            .OrderByDescending(t => t.CreatedAt)
             .Skip(skip)
             .Take(take)
             .Select(t => new TransactionHistoryDto
