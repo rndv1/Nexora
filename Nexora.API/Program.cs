@@ -27,6 +27,7 @@ namespace Nexora.API
             builder.Services.AddScoped<IAccountRepository, AccountRepository>();
             builder.Services.AddScoped<IUserRepository, UserRepository>();
             builder.Services.AddScoped<ISessionRepository, SessionRepository>();
+            builder.Services.AddScoped<IOutboxRepository, OutboxRepository>();
 
             builder.Services.AddMediatR(cfg =>
             {
@@ -79,6 +80,7 @@ namespace Nexora.API
 
             builder.Services.AddControllers();
             builder.Services.AddHostedService<SessionCleanupService>();
+            builder.Services.AddHostedService<OutboxPublisherBackgroundService>();
             
             var app = builder.Build();
 

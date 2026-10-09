@@ -50,6 +50,11 @@ public class AccountRepository : IAccountRepository
         await _dbContext.Transactions.AddAsync(transaction, cancellationToken);
     }
 
+    public async Task AddOutboxMessageAsync(OutboxMessage message, CancellationToken cancellationToken)
+    {
+        await _dbContext.OutboxMessages.AddAsync(message, cancellationToken);
+    }
+
     public async Task SaveChangesAsync(CancellationToken cancellationToken)
     {
         await _dbContext.SaveChangesAsync(cancellationToken);

@@ -10,6 +10,7 @@ public interface IAccountRepository
     Task IncrementBalanceAsync(int accountId, decimal amount, CancellationToken cancellationToken);
     Task<bool> TryDecrementBalanceAsync(int accountId, decimal amount, CancellationToken cancellationToken);
     Task AddTransactionAsync(Transaction transaction, CancellationToken cancellationToken);
+    Task AddOutboxMessageAsync(OutboxMessage message, CancellationToken cancellationToken);
     Task SaveChangesAsync(CancellationToken cancellationToken);
     Task BeginTransactionAsync(CancellationToken cancellationToken);
     Task CommitTransactionAsync(CancellationToken cancellationToken);

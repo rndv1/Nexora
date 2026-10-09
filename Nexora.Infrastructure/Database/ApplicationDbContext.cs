@@ -11,6 +11,7 @@ namespace Nexora.Infrastructure.Database
         public DbSet<User> Users { get; set; } = null!;
         public DbSet<Session> Sessions { get; set; } = null!;
         public DbSet<Transaction> Transactions { get; set; } = null!;
+        public DbSet<OutboxMessage> OutboxMessages { get; set; } = null!;
 
 
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
@@ -144,6 +145,21 @@ namespace Nexora.Infrastructure.Database
             userEntity
                 .HasIndex(x => x.Login)
                 .IsUnique();
+
+            var outboxEntity = modelBuilder.Entity<OutboxMessage>()
+                .ToTable("outbox_messages");
+
+            outboxEntity.HasKey(x => x.Id);
+
+            outboxEntity.Property(x => x.Id).HasColumnName("id");
+            outboxEntity.Property(x => x.Type).HasColumnName("type").IsRequired().HasMaxLength(255);
+            outboxEntity.Property(x => x.Payload).HasColumnName("payload").IsRequired();
+            outboxEntity.Property(x => x.CreatedAt).HasColumnName("created_at");
+            outboxEntity.Property(x => x.ProcessedAt).HasColumnName("processed_at");
+            outboxEntity.Property(x => x.Error).HasColumnName("error");
+            outboxEntity.Property(x => x.RetryCount).HasColumnName("retry_count").HasDefaultValue(0);
+
+            outboxEntity.HasIndex(x => new { x.ProcessedAt, x.CreatedAt });
         }
 
         private void SeedUserData(EntityTypeBuilder<User> userEntity)
