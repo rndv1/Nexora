@@ -1,6 +1,8 @@
+using System.Text.Json;
 using MediatR;
 using Nexora.Application.Events;
 using Nexora.Application.Interfaces;
+using Nexora.Domain.Models;
 
 namespace Nexora.Application.Features.Finance.Transfer;
 
@@ -8,13 +10,11 @@ public class TransferCommandHandler : IRequestHandler<TransferCommand, Result>
 {
     private readonly IAccountRepository _accountRepository;
     private readonly IUserRepository _userRepository;
-    private readonly IMessageProducer _messageProducer;
 
-    public TransferCommandHandler(IAccountRepository accountRepository, IUserRepository userRepository, IMessageProducer messageProducer)
+    public TransferCommandHandler(IAccountRepository accountRepository, IUserRepository userRepository)
     {
         _accountRepository = accountRepository;
         _userRepository = userRepository;
-        _messageProducer = messageProducer;
     }
 
     public async Task<Result> Handle(TransferCommand request, CancellationToken cancellationToken)
@@ -74,16 +74,25 @@ public class TransferCommandHandler : IRequestHandler<TransferCommand, Result>
             };
             await _accountRepository.AddTransactionAsync(transaction, cancellationToken);
 
-            await _accountRepository.SaveChangesAsync(cancellationToken);
-            await _accountRepository.CommitTransactionAsync(cancellationToken);
-
-            await _messageProducer.SendMessageAsync(new TransactionCreatedEvent
+            var eventPayload = JsonSerializer.Serialize(new TransactionCreatedEvent
             {
                 SenderId = request.FromUserId,
                 ReceiverId = receiverUser.Id,
                 Amount = transaction.Amount,
                 Currency = transaction.Currency
-            }, cancellationToken); 
+            });
+
+            var outboxMessage = new OutboxMessage
+            {
+                Id = Guid.NewGuid(),
+                Type = nameof(TransactionCreatedEvent),
+                Payload = eventPayload,
+                CreatedAt = DateTime.UtcNow
+            };
+            await _accountRepository.AddOutboxMessageAsync(outboxMessage, cancellationToken);
+
+            await _accountRepository.SaveChangesAsync(cancellationToken);
+            await _accountRepository.CommitTransactionAsync(cancellationToken);
 
             return Result.Success();
         }
