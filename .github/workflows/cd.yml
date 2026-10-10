@@ -1,0 +1,57 @@
+name: CD - Deploy to Server
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    name: Deploy via SSH
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to Ubuntu Server via SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          port: ${{ secrets.SERVER_PORT || 22 }}
+          script_stop: true
+          script: |
+            echo "=== Starting Nexora CD Deployment ==="
+            
+            # Locate or create project directory
+            APP_DIR="$HOME/Nexora"
+            if [ ! -d "$APP_DIR" ] && [ -d "/opt/nexora" ]; then
+              APP_DIR="/opt/nexora"
+            fi
+
+            if [ ! -d "$APP_DIR" ]; then
+              echo "Directory $APP_DIR does not exist. Cloning repository..."
+              git clone https://github.com/rndv1/Nexora.git "$APP_DIR"
+            fi
+
+            cd "$APP_DIR"
+            echo "Working directory: $(pwd)"
+
+            # Fetch and update to latest main
+            echo "Fetching latest changes from origin/main..."
+            git fetch origin main
+            git reset --hard origin/main
+
+            # Ensure .env exists
+            if [ ! -f .env ]; then
+              echo "Generating default .env file..."
+              echo "POSTGRES_PASSWORD=NexoraSecurePass$(openssl rand -hex 8)" > .env
+            fi
+
+            # Rebuild and restart containers
+            echo "Rebuilding and restarting docker containers..."
+            docker compose down --remove-orphans
+            docker compose up -d --build
+
+            echo "Containers status:"
+            docker compose ps
+
+            echo "=== Nexora Deployment Completed Successfully ==="
